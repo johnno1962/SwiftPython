@@ -1,10 +1,7 @@
 
 // bridging class to be generated from Python module using code generator script
 
-import Foundation
-
 private let module = PythonModule(named: "complex")
-
 private let pythonComplex = PythonClass(module: module, named: "Complex")
 
 public class Complex: PythonObject {
@@ -26,7 +23,7 @@ public class Complex: PythonObject {
         newObject.withPtr { _ in } // keep object alive
     }
 
-    static let addMethod = pythonComplex.method(named: "add")
+    private static let addMethod = pythonComplex.method(named: "add")
 
     public func add(c: Any) {
         let args = selfTuple(count: 2)
@@ -34,7 +31,7 @@ public class Complex: PythonObject {
         _ = Complex.addMethod.call(args: args)
     }
 
-    static let toStringMethod = pythonComplex.method(named: "toString")
+    private static let toStringMethod = pythonComplex.method(named: "toString")
 
     public func toString(extra: Any) -> String {
         let args = selfTuple(count: 2)
@@ -42,23 +39,18 @@ public class Complex: PythonObject {
         return Complex.toStringMethod.call(args: args).asString
     }
 
-    static let toArrayMethod = pythonComplex.method(named: "toArray")
+    private static let toArrayMethod = pythonComplex.method(named: "toArray")
 
     public func toArray() -> [Double] {
         let args = selfTuple(count: 1)
-        return Complex.toArrayMethod.call(args: args).asArray.map { $0.asDouble }
+        return Complex.toArrayMethod.call(args: args).asArray(of: Double.self)
     }
 
-    static let toDictionaryMethod = pythonComplex.method(named: "toDictionary")
+    private static let toDictionaryMethod = pythonComplex.method(named: "toDictionary")
 
     public func toDictionary() -> [String: Double] {
         let args = selfTuple(count: 1)
-        let dict = Complex.toDictionaryMethod.call(args: args).asDictionary
-        var out = [String: Double]()
-        for (key, value) in dict {
-            out[key] = value.asDouble
-        }
-        return out
+        return Complex.toDictionaryMethod.call(args: args).asDictionary(of: Double.self)
     }
 }
 

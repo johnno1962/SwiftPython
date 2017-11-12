@@ -52,17 +52,32 @@ public class PythonObject {
         return PyLong_AsLong(object)
     }
 
-    public var asArray: [PythonObject] {
-        return (0 ..< PyList_Size(object)).map { PythonObject(PyList_GetItem(object, $0), own: true) }
+    public func asAny<T>(of type: T.Type) -> Any {
+        if type == String.self {
+            return asString
+        }
+        else if type == Double.self {
+            return asDouble
+        }
+        else if type == Int.self {
+            return asInt
+        }
+        return self
     }
 
-    public var asDictionary: [String: PythonObject] {
-        var out = [String: PythonObject]()
+    public func asArray<T>(of type: T.Type) -> [T] {
+        return (0 ..< PyList_Size(object))
+            .map { PythonObject(PyList_GetItem(object, $0), own: true).asAny(of: type) } as! [T]
+    }
+
+    public func asDictionary<T>(of type: T.Type) -> [String: T] {
+        var out = [String: T]()
         let keys = PyDict_Keys(object)
         for key in (0 ..< PyList_Size(keys)).map({ PyList_GetItem(keys, $0) }) {
             out[String(cString: PyString_AsString(key))] =
-                PythonObject(PyDict_GetItem(object, key), own: true)
+                PythonObject(PyDict_GetItem(object, key), own: true).asAny(of: type) as? T
         }
+        Py_DecRef(keys)
         return out
     }
 
@@ -148,15 +163,18 @@ public func PythonArg(_ arg: Any) -> PyPtr? {
     } else if let value = arg as? Int {
         return PyLong_FromLong(value)
     } else if let value = arg as? [Any] {
-        let list = PyList_New(0)
-        for item in value {
-            PyList_Append(list, PythonArg(item))
+        let list = PyList_New(value.count)
+        for index in 0 ..< value.count {
+            let item = PythonArg(value[index])
+            PyList_SetItem(list, index, item)
         }
         return list
     } else if let value = arg as? [String: Any] {
         let dict = PyDict_New()
         for (key, entry) in value {
-            PyDict_SetItemString(dict, key, PythonArg(entry))
+            let entry = PythonArg(entry)
+            PyDict_SetItemString(dict, key, entry)
+            Py_DecRef(entry)
         }
         return dict
     }
