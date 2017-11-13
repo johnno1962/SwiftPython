@@ -30,6 +30,10 @@ def geninit(classname, name, func):
     args = inspect.getargspec(func)[0]
     args = args[1:]
     print("""
+    public required init(_ object: PyPtr?, own: Bool = false) {
+        super.init(object, own: own)
+    }
+
     public init(%s) {
         let args = PythonTuple(count: %d)""" %
           (", ".join(map(lambda arg: "_ "+arg+": Any", args)), len(args)))
@@ -102,11 +106,7 @@ def genclass(classname, clazz):
     print("""
 private let %sClass = PythonClass(module: module, named: "%s")
 
-public class %s: PythonObject {
-
-    public required init(_ object: PyPtr?, own: Bool = false) {
-        super.init(object, own: own)
-    }""" % (classname, classname, classname))
+public class %s: PythonObject {""" % (classname, classname, classname))
 
     for (name, type) in re.findall(r"Swift var (\w+): (\S+)", clazz.__doc__):
         print("""

@@ -5,6 +5,8 @@
 //  Created by John Holdsworth on 12/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
+//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#9 $
+//
 //  Support for Python bridge classes
 //
 
@@ -29,7 +31,9 @@ public class PythonObject {
     }
 
     public func setAttr(named name: String, value: Any) {
-        PyObject_SetAttrString(object, name, PythonArg(value))
+        let value = PythonArg(value)
+        PyObject_SetAttrString(object, name, value)
+        Py_DecRef(value)
     }
 
     public func withPtr<T>(closure: (_: PyPtr?) -> T) -> T {
@@ -52,7 +56,7 @@ public class PythonObject {
     }
 
     public var asInt: Int {
-        return PyLong_AsLong(object)
+        return PyInt_AsLong(object)
     }
 
     public var asVoid: Void {
@@ -192,7 +196,7 @@ public func PythonArg(_ arg: Any) -> PyPtr? {
     } else if let value = arg as? Double {
         return PyFloat_FromDouble(value)
     } else if let value = arg as? Int {
-        return PyLong_FromLong(value)
+        return PyInt_FromLong(value)
     } else if let value = arg as? [Any] {
         let list = PyList_New(value.count)
         for index in 0 ..< value.count {

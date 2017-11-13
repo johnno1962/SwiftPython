@@ -7,10 +7,6 @@ private let ComplexClass = PythonClass(module: module, named: "Complex")
 
 public class Complex: PythonObject {
 
-    public required init(_ object: PyPtr?, own: Bool = false) {
-        super.init(object, own: own)
-    }
-
     public var r: Double {
         get {
             return PythonObject(getAttr(named: "r")).asDouble
@@ -27,6 +23,10 @@ public class Complex: PythonObject {
         set(newValue) {
             setAttr(named: "i", value: newValue)
         }
+    }
+
+    public required init(_ object: PyPtr?, own: Bool = false) {
+        super.init(object, own: own)
     }
 
     public init(_ realpart: Any, _ imagpart: Any) {
