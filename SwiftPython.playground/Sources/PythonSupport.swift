@@ -1,5 +1,12 @@
-
-// support for python bridge classes
+//
+//  SwiftEval.swift
+//  SwiftPython
+//
+//  Created by John Holdsworth on 12/11/2017.
+//  Copyright © 2017 John Holdsworth. All rights reserved.
+//
+//  Support for Python bridge classes
+//
 
 import Foundation
 @_exported import Python
@@ -10,15 +17,19 @@ public class PythonObject {
 
     public let object: PyPtr?
 
-    public init(_ object: PyPtr?, own: Bool = false) {
+    public required init(_ object: PyPtr?, own: Bool = false) {
         if own {
             Py_IncRef(object)
         }
         self.object = object
     }
 
-    public func attr(named name: String) -> PyPtr? {
+    public func getAttr(named name: String) -> PyPtr? {
         return PyObject_GetAttrString(object, name)
+    }
+
+    public func setAttr(named name: String, value: Any) {
+        PyObject_SetAttrString(object, name, PythonArg(value))
     }
 
     public func withPtr<T>(closure: (_: PyPtr?) -> T) -> T {
@@ -52,14 +63,16 @@ public class PythonObject {
         return PyLong_AsLong(object)
     }
 
+    public var asVoid: Void {
+        return
+    }
+
     public func asAny<T>(of type: T.Type) -> Any {
         if type == String.self {
             return asString
-        }
-        else if type == Double.self {
+        } else if type == Double.self {
             return asDouble
-        }
-        else if type == Int.self {
+        } else if type == Int.self {
             return asInt
         }
         return self
@@ -81,6 +94,10 @@ public class PythonObject {
         return out
     }
 
+    public func asPythonObject<T: PythonObject>(of _: T.Type) -> T {
+        return T(object)
+    }
+
     deinit {
         Py_DecRef(object)
     }
@@ -93,6 +110,11 @@ public class PythonModule: PythonObject {
     static var initialize: Void = {
         Py_Initialize()
     }()
+
+    public required init(_ object: PyPtr?, own: Bool = false) {
+        self.name = ""
+        super.init(object, own: own)
+    }
 
     public init(named name: String) {
         _ = PythonModule.initialize
@@ -118,8 +140,13 @@ public class PythonClass: PythonObject {
 
     public let name: String
 
+    public required init(_ object: PyPtr?, own: Bool = false) {
+        self.name = ""
+        super.init(object, own: own)
+    }
+
     public init(module: PythonModule, named name: String) {
-        guard let clazz = module.attr(named: name) else {
+        guard let clazz = module.getAttr(named: name) else {
             fatalError("Unable to find class \(name) in module \(module.name)")
         }
         self.name = name
@@ -127,7 +154,7 @@ public class PythonClass: PythonObject {
     }
 
     public func method(named name: String) -> PythonMethod {
-        guard let method = attr(named: name) else {
+        guard let method = getAttr(named: name) else {
             fatalError("Unable to find method \(name) in class \(self.name)")
         }
         return PythonMethod(method)
@@ -138,6 +165,10 @@ public class PythonMethod: PythonObject {
 }
 
 public class PythonTuple: PythonObject {
+
+    public required init(_ object: PyPtr?, own: Bool = false) {
+        super.init(object, own: own)
+    }
 
     public init(count: Int) {
         super.init(PyTuple_New(count))

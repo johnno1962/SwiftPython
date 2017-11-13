@@ -24,6 +24,8 @@ print(c.toString(extra: ["a": 1.0, "b": 2.0, "c": [1,2,3]]))
 
 c.toArray()
 c.toDictionary()
+
+print(newComplex(real: 123, imag: 456).toString(extra: c))
 ```
 
 Contains a simple playground that uses a class "Complex" that is implemented in Python
@@ -36,5 +38,9 @@ bridging and would normally  be generated automatically by a python code generat
 module. The underlying python implementation "[complex.py](SwiftPython.playground/Resources/complex.py)"
 is included in the playground as a resource.
 
-If someone who knows python better than me would like to contribute the code generator that
-would be a big help. The starting point seems to be [here](https://stackoverflow.com/questions/15200048/how-to-get-the-parameters-type-and-return-type-of-a-function).
+### Code generator
+
+An example code generator [bridgegen.py](bridgegen.py) is included. Its first argument
+is the module to be generated then an optional path to the module so python can find it.
+Swift code will be printed to stdout. Use doc comments as shown in complex.py to control
+the return type of functions or specify instance variables.

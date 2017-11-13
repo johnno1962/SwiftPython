@@ -2,7 +2,13 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:LICENSE">
+   </FileRef>
+   <FileRef
       location = "group:README.md">
+   </FileRef>
+   <FileRef
+      location = "group:bridgegen.py">
    </FileRef>
    <FileRef
       location = "group:SwiftPython.playground">
