@@ -43,14 +43,6 @@ public class PythonObject {
         return args
     }
 
-    public func call(args: PythonTuple) -> PythonObject {
-        let ret = args.withPtr { PyObject_Call(object, $0, nil) }
-        if let _ = PyErr_Occurred() {
-            PyErr_Print()
-        }
-        return PythonObject(ret)
-    }
-
     public var asString: String {
         return String(cString: PyString_AsString(object))
     }
@@ -136,7 +128,18 @@ public class PythonModule: PythonObject {
     }
 }
 
-public class PythonClass: PythonObject {
+public class PythonFunction: PythonObject {
+
+    public func call(args: PythonTuple) -> PythonObject {
+        let ret = args.withPtr { PyObject_Call(object, $0, nil) }
+        if let _ = PyErr_Occurred() {
+            PyErr_Print()
+        }
+        return PythonObject(ret)
+    }
+}
+
+public class PythonClass: PythonFunction {
 
     public let name: String
 
@@ -153,15 +156,12 @@ public class PythonClass: PythonObject {
         super.init(clazz)
     }
 
-    public func method(named name: String) -> PythonMethod {
+    public func method(named name: String) -> PythonFunction {
         guard let method = getAttr(named: name) else {
             fatalError("Unable to find method \(name) in class \(self.name)")
         }
-        return PythonMethod(method)
+        return PythonFunction(method)
     }
-}
-
-public class PythonMethod: PythonObject {
 }
 
 public class PythonTuple: PythonObject {

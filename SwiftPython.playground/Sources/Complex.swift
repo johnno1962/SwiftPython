@@ -69,7 +69,7 @@ public class Complex: PythonObject {
     }
 }
 
-private let newComplexFunction = PythonMethod(module.getAttr(named: "newComplex"))
+private let newComplexFunction = PythonFunction(module.getAttr(named: "newComplex"))
 
 public func newComplex(real: Any, imag: Any) -> Complex {
     let args = PythonTuple(count: 2)

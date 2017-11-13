@@ -6,7 +6,7 @@
 #
 # The Swift code generated will be printed to stdout
 #
-# Should be used in conjunction with suuport code:
+# Should be used in conjunction with support code:
 # SwiftPython.playground/Sources/PythonSupport.swift
 #
 
@@ -69,7 +69,7 @@ def genfunction(name, func):
     (returns, asCall) = asTypes(func.__doc__)
 
     print("""
-private let %sFunction = PythonMethod(module.getAttr(named: "%s"))
+private let %sFunction = PythonFunction(module.getAttr(named: "%s"))
 
 public func %s(%s) -> %s {
     let args = PythonTuple(count: %d)""" %
