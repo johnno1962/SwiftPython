@@ -46,6 +46,14 @@ public class Complex: PythonObject {
         return Complex.addMethod.call(args: args).asVoid
     }
 
+    private static let echoArrayMethod = ComplexClass.method(named: "echoArray")
+
+    public func echoArray(value: Any) -> [Int] {
+        let args = selfTuple(count: 2)
+        args.set(item: 1, arg: value)
+        return Complex.echoArrayMethod.call(args: args).asArray(of: Int.self)
+    }
+
     private static let toArrayMethod = ComplexClass.method(named: "toArray")
 
     public func toArray() -> [Double] {

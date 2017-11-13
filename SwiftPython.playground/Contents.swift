@@ -18,4 +18,6 @@ print(c.toString(extra: ["a": 1.0, "b": 2.0, "c": [1,2,3]]))
 c.toArray()
 c.toDictionary()
 
-print(newComplex(real: 123, imag: 456).toString(extra: c))
+print(newComplex(real: 123, imag: 456).toString(extra: c.toDictionary()))
+
+c.echoArray(value: Array(0 ..< 1_000_000)).count

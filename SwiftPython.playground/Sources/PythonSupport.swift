@@ -87,7 +87,7 @@ public class PythonObject {
     }
 
     public func asPythonObject<T: PythonObject>(of _: T.Type) -> T {
-        return T(object)
+        return T(object, own: true)
     }
 
     deinit {

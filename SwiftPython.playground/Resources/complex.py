@@ -27,6 +27,10 @@ class Complex:
         """ Swift returns [String: Double] """
         return {'real': self.r, 'imag': self.i}
 
+    def echoArray(self, value):
+        """ Swift returns [Int] """
+        return value
+
 def newComplex(real, imag):
     """ Swift returns Complex """
     return Complex(real, imag)
