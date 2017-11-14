@@ -11,12 +11,48 @@ var str = "Hello, python integration"
 
 // class Complex is implemented in python
 
+Complex.classvar = "Python"
+Complex.classvar
+
 let c = Complex(11.0, 12.0)
 print(c.toString(extra: "123"))
 
-c.r
 c.add(c: Complex(1.0, 2.0))
 c.r
+
+c.array = [1,2,3]
+c.array
+
+let callback1 = {
+    (args: [PythonObject]) -> PythonObject in
+    print(args[0].asString)
+    return c
+}
+func callback2(_ args: [PythonObject]) -> PythonObject {
+    print(args[0].asString)
+    return c
+}
+
+c.callme(closure: PythonCallback(closure: callback1), str: "Hello Swift")
+
+PythonObject(any: "123").asString
+
+let list = PythonList()
+list.append("123")
+list.append("234")
+list.append("345")
+list.asArray(of: String.self)
+
+let dict = PythonDict()
+dict.set("ABC", 123)
+dict.set("DEF", 456)
+dict.asDictionary(of: Int.self)
+
+PythonObject(any: [1, 2, 3]).asArray(of: Int.self)
+PythonObject(any: [1, 2, 3]).asArray(of: Double.self)
+PythonObject(any: [1.5, 2.5, 3.5]).asArray(of: Int.self)
+PythonObject(any: [1.5, 2.5, 3.5]).asArray(of: Double.self)
+PythonObject(any: ["a": 123, "b": 456]).asDictionary(of: Int.self)
 
 print(c.toString(extra: [1,2,3]))
 print(c.toString(extra: [1.0,2.0,3.0]))

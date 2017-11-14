@@ -3,8 +3,14 @@
 # triple quoted doc strings are typing hints for
 # Swift code generator script
 
+import sys
+
 class Complex:
-    """ Swift var r: Double Swift var i: Double """
+    """ Swift var classvar: String Swift var array: [Double]
+        Swift var r: Double Swift var i: Double """
+
+    """ Swift returns String """
+    classvar = "Complex"
 
     def __init__(self, realpart, imagpart):
         self.r = realpart
@@ -30,6 +36,16 @@ class Complex:
     def echoArray(self, value):
         """ Swift returns [Int] """
         return value
+
+    def callme(self, closure, str):
+        """ Swift returns [String: Double] """
+        # Dance necessary to call back to Swift
+        callback = sys.modules["swift"].callback
+        # callback expects closure and argument list
+        out = callback(closure, [str]).toDictionary()
+        # deallocate the closure when you're done
+        callback(closure, None)
+        return out
 
 def newComplex(real, imag):
     """ Swift returns Complex """

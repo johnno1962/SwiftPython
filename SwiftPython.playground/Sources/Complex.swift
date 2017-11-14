@@ -1,5 +1,5 @@
 
-// Generated from module complex
+// Generated from module complex by bridgegen.py
 
 private let module = PythonModule(named: "complex")
 
@@ -7,9 +7,31 @@ private let ComplexClass = PythonClass(module: module, named: "Complex")
 
 public class Complex: PythonObject {
 
+    public required init(_ object: PythonObject) {
+        super.init(object)
+    }
+
+    public class var classvar: String {
+        get {
+            return ComplexClass.getAttr(named: "classvar").asString
+        }
+        set(newValue) {
+            ComplexClass.setAttr(named: "classvar", value: newValue)
+        }
+    }
+
+    public var array: [Double] {
+        get {
+            return getAttr(named: "array").asArray(of: Double.self)
+        }
+        set(newValue) {
+            setAttr(named: "array", value: newValue)
+        }
+    }
+
     public var r: Double {
         get {
-            return PythonObject(getAttr(named: "r")).asDouble
+            return getAttr(named: "r").asDouble
         }
         set(newValue) {
             setAttr(named: "r", value: newValue)
@@ -18,24 +40,22 @@ public class Complex: PythonObject {
 
     public var i: Double {
         get {
-            return PythonObject(getAttr(named: "i")).asDouble
+            return getAttr(named: "i").asDouble
         }
         set(newValue) {
             setAttr(named: "i", value: newValue)
         }
     }
 
-    public required init(_ object: PyPtr?, own: Bool = false) {
-        super.init(object, own: own)
-    }
-
-    public init(_ realpart: Any, _ imagpart: Any) {
+    public init(realpart: Any, imagpart: Any) {
         let args = PythonTuple(count: 2)
         args.set(item: 0, arg: realpart)
         args.set(item: 1, arg: imagpart)
-        let newObject = ComplexClass.call(args: args)
-        super.init(newObject.object, own: true)
-        newObject.withPtr { _ in } // keep object alive
+        super.init(ComplexClass.call(args: args))
+    }
+
+    public convenience init(_ realpart: Any, _ imagpart: Any) {
+        self.init(realpart: realpart, imagpart: imagpart)
     }
 
     private static let addMethod = ComplexClass.method(named: "add")
@@ -46,12 +66,33 @@ public class Complex: PythonObject {
         return Complex.addMethod.call(args: args).asVoid
     }
 
+    public func add(_ c: Any) -> Void {
+        return add(c: c)
+    }
+
+    private static let callmeMethod = ComplexClass.method(named: "callme")
+
+    public func callme(closure: Any, str: Any) -> [String: Double] {
+        let args = selfTuple(count: 3)
+        args.set(item: 1, arg: closure)
+        args.set(item: 2, arg: str)
+        return Complex.callmeMethod.call(args: args).asDictionary(of: Double.self)
+    }
+
+    public func callme(_ closure: Any, _ str: Any) -> [String: Double] {
+        return callme(closure: closure, str: str)
+    }
+
     private static let echoArrayMethod = ComplexClass.method(named: "echoArray")
 
     public func echoArray(value: Any) -> [Int] {
         let args = selfTuple(count: 2)
         args.set(item: 1, arg: value)
         return Complex.echoArrayMethod.call(args: args).asArray(of: Int.self)
+    }
+
+    public func echoArray(_ value: Any) -> [Int] {
+        return echoArray(value: value)
     }
 
     private static let toArrayMethod = ComplexClass.method(named: "toArray")
@@ -75,6 +116,10 @@ public class Complex: PythonObject {
         args.set(item: 1, arg: extra)
         return Complex.toStringMethod.call(args: args).asString
     }
+
+    public func toString(_ extra: Any) -> String {
+        return toString(extra: extra)
+    }
 }
 
 private let newComplexFunction = PythonFunction(module.getAttr(named: "newComplex"))
@@ -84,4 +129,8 @@ public func newComplex(real: Any, imag: Any) -> Complex {
     args.set(item: 0, arg: real)
     args.set(item: 1, arg: imag)
     return newComplexFunction.call(args: args).asPythonObject(of: Complex.self)
+}
+
+public func newComplex(_ real: Any, _ imag: Any) -> Complex {
+    return newComplex(real: real, imag: imag)
 }
