@@ -1,9 +1,9 @@
 
 // Generated from module complex by bridgegen.py
 
-private let module = PythonModule(named: "complex")
+public let complexModule = PythonModule(named: "complex")
 
-private let ComplexClass = PythonClass(module: module, named: "Complex")
+public let ComplexClass = PythonClass(module: complexModule, named: "Complex")
 
 public class Complex: PythonObject {
 
@@ -48,9 +48,7 @@ public class Complex: PythonObject {
     }
 
     public init(realpart: Any, imagpart: Any) {
-        let args = PythonTuple(count: 2)
-        args.set(item: 0, arg: realpart)
-        args.set(item: 1, arg: imagpart)
+        let args = PythonTuple(args: [realpart, imagpart])
         super.init(ComplexClass.call(args: args))
     }
 
@@ -61,8 +59,7 @@ public class Complex: PythonObject {
     private static let addMethod = ComplexClass.method(named: "add")
 
     public func add(c: Any) -> Void {
-        let args = selfTuple(count: 2)
-        args.set(item: 1, arg: c)
+        let args = PythonTuple(args: [self, c])
         return Complex.addMethod.call(args: args).asVoid
     }
 
@@ -73,9 +70,7 @@ public class Complex: PythonObject {
     private static let callmeMethod = ComplexClass.method(named: "callme")
 
     public func callme(closure: Any, str: Any) -> [String: Double] {
-        let args = selfTuple(count: 3)
-        args.set(item: 1, arg: closure)
-        args.set(item: 2, arg: str)
+        let args = PythonTuple(args: [self, closure, str])
         return Complex.callmeMethod.call(args: args).asDictionary(of: Double.self)
     }
 
@@ -86,8 +81,7 @@ public class Complex: PythonObject {
     private static let echoArrayMethod = ComplexClass.method(named: "echoArray")
 
     public func echoArray(value: Any) -> [Int] {
-        let args = selfTuple(count: 2)
-        args.set(item: 1, arg: value)
+        let args = PythonTuple(args: [self, value])
         return Complex.echoArrayMethod.call(args: args).asArray(of: Int.self)
     }
 
@@ -98,22 +92,21 @@ public class Complex: PythonObject {
     private static let toArrayMethod = ComplexClass.method(named: "toArray")
 
     public func toArray() -> [Double] {
-        let args = selfTuple(count: 1)
+        let args = PythonTuple(args: [self])
         return Complex.toArrayMethod.call(args: args).asArray(of: Double.self)
     }
 
     private static let toDictionaryMethod = ComplexClass.method(named: "toDictionary")
 
     public func toDictionary() -> [String: Double] {
-        let args = selfTuple(count: 1)
+        let args = PythonTuple(args: [self])
         return Complex.toDictionaryMethod.call(args: args).asDictionary(of: Double.self)
     }
 
     private static let toStringMethod = ComplexClass.method(named: "toString")
 
     public func toString(extra: Any) -> String {
-        let args = selfTuple(count: 2)
-        args.set(item: 1, arg: extra)
+        let args = PythonTuple(args: [self, extra])
         return Complex.toStringMethod.call(args: args).asString
     }
 
@@ -122,12 +115,64 @@ public class Complex: PythonObject {
     }
 }
 
-private let newComplexFunction = PythonFunction(module.getAttr(named: "newComplex"))
+public let SwiftClosureClass = PythonClass(module: complexModule, named: "SwiftClosure")
+
+public class SwiftClosure: PythonObject {
+
+    public required init(_ object: PythonObject) {
+        super.init(object)
+    }
+
+    private static let __enter__Method = SwiftClosureClass.method(named: "__enter__")
+
+    public func __enter__() -> PythonObject {
+        let args = PythonTuple(args: [self])
+        return SwiftClosure.__enter__Method.call(args: args)
+    }
+
+    private static let __exit__Method = SwiftClosureClass.method(named: "__exit__")
+
+    public func __exit__(exc_type: Any, exc_val: Any, exc_tb: Any) -> PythonObject {
+        let args = PythonTuple(args: [self, exc_type, exc_val, exc_tb])
+        return SwiftClosure.__exit__Method.call(args: args)
+    }
+
+    public func __exit__(_ exc_type: Any, _ exc_val: Any, _ exc_tb: Any) -> PythonObject {
+        return __exit__(exc_type: exc_type, exc_val: exc_val, exc_tb: exc_tb)
+    }
+
+    public init(closure: Any) {
+        let args = PythonTuple(args: [closure])
+        super.init(SwiftClosureClass.call(args: args))
+    }
+
+    public convenience init(_ closure: Any) {
+        self.init(closure: closure)
+    }
+
+    private static let callMethod = SwiftClosureClass.method(named: "call")
+
+    public func call(args: Any) -> PythonObject {
+        let args = PythonTuple(args: [self, args])
+        return SwiftClosure.callMethod.call(args: args)
+    }
+
+    public func call(_ args: Any) -> PythonObject {
+        return call(args: args)
+    }
+
+    private static let deallocateMethod = SwiftClosureClass.method(named: "deallocate")
+
+    public func deallocate() -> Void {
+        let args = PythonTuple(args: [self])
+        return SwiftClosure.deallocateMethod.call(args: args).asVoid
+    }
+}
+
+private let newComplexFunction = PythonFunction(complexModule.getAttr(named: "newComplex"))
 
 public func newComplex(real: Any, imag: Any) -> Complex {
-    let args = PythonTuple(count: 2)
-    args.set(item: 0, arg: real)
-    args.set(item: 1, arg: imag)
+    let args = PythonTuple(args: [real, imag])
     return newComplexFunction.call(args: args).asPythonObject(of: Complex.self)
 }
 

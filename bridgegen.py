@@ -9,6 +9,8 @@
 # Should be used in conjunction with support code:
 # SwiftPython.playground/Sources/PythonSupport.swift
 #
+#  $Id: //depot/SwiftPython/bridgegen.py#18 $
+#
 
 import inspect
 import sys
@@ -25,13 +27,13 @@ def main():
     print("""
 // Generated from module %s by bridgegen.py
 
-private let module = PythonModule(named: "%s")""" % (module, module))
+public let %sModule = PythonModule(named: "%s")""" % (module, module, module))
 
     for name, obj in inspect.getmembers(sys.modules[module]):
         if inspect.isfunction(obj):
-            genfunction(name, obj)
+            genfunction(module, name, obj)
         elif inspect.isclass(obj):
-            genclass(name, obj)
+            genclass(module, name, obj)
 
 
 def asCall(swiftType):
@@ -42,7 +44,7 @@ def asCall(swiftType):
         array = re.search(r"\[(\S+)\]", swiftType)
         if array:
             return ".asArray(of: %s.self)" % array.group(1)
-        elif re.search(r"^(String|Double|Int|Void)$", swiftType):
+        elif re.search(r"^(String|Double|Int|Data|Void)$", swiftType):
             return ".as%s" % swiftType
         else:
             return ".asPythonObject(of: %s.self)" % swiftType
@@ -59,20 +61,18 @@ def asTypes(obj):
     return (swiftType, asCall(swiftType))
 
 
-def genfunction(name, func):
+def genfunction(module, name, func):
     args = inspect.getargspec(func)[0]
     (swiftType, asCall) = asTypes(func)
 
     print("""
-private let %sFunction = PythonFunction(module.getAttr(named: "%s"))
+private let %sFunction = PythonFunction(%sModule.getAttr(named: "%s"))
 
 public func %s(%s) -> %s {
-    let args = PythonTuple(count: %d)""" %
-          (name, name,
-           name, ", ".join(map(lambda arg: arg+": Any", args)), swiftType, len(args)))
-
-    for i in range(0, len(args)):
-        print("    args.set(item: %d, arg: %s)" % (i, args[i]))
+    let args = PythonTuple(args: [%s])""" %
+          (name, module, name,
+           name, ", ".join(map(lambda arg: arg+": Any", args)),
+           swiftType, ", ".join(args)))
 
     print("""    return %sFunction.call(args: args)%s
 }""" % (name, asCall))
@@ -85,25 +85,26 @@ public func %s(%s) -> %s {
         name, ", ".join(map(lambda arg: arg+": "+arg, args))))
 
 
-def genclass(classname, clazz):
+def genclass(module, classname, clazz):
     print("""
-private let %sClass = PythonClass(module: module, named: "%s")
+public let %sClass = PythonClass(module: %sModule, named: "%s")
 
 public class %s: PythonObject {
 
     public required init(_ object: PythonObject) {
         super.init(object)
-    }""" % (classname, classname, classname))
+    }""" % (classname, module, classname, classname))
 
-    for name, swiftType in re.findall(r"Swift var (\w+): (\[[^\]]+\]|\w+)", clazz.__doc__):
-        if getattr(clazz, name, None):
-            cvar = "class "
-            avar = classname+"Class."
-        else:
-            cvar = ""
-            avar = ""
+    if clazz.__doc__:
+        for name, swiftType in re.findall(r"Swift var (\w+): (\[[^\]]+\]|\w+)", clazz.__doc__):
+            if getattr(clazz, name, None):
+                cvar = "class "
+                avar = classname+"Class."
+            else:
+                cvar = ""
+                avar = ""
 
-        print("""
+            print("""
     public %svar %s: %s {
         get {
             return %sgetAttr(named: "%s")%s
@@ -128,11 +129,9 @@ def geninit(classname, name, func):
     args = args[1:]
     print("""
     public init(%s) {
-        let args = PythonTuple(count: %d)""" %
-          (", ".join(map(lambda arg: arg+": Any", args)), len(args)))
-
-    for i in range(0, len(args)):
-        print("        args.set(item: %d, arg: %s)" % (i, args[i]))
+        let args = PythonTuple(args: [%s])""" %
+          (", ".join(map(lambda arg: arg+": Any", args)),
+           ", ".join(args)))
 
     print("""        super.init(%sClass.call(args: args))
     }""" % (classname))
@@ -154,13 +153,10 @@ def genmethod(classname, name, func):
     private static let %sMethod = %sClass.method(named: "%s")
 
     public func %s(%s) -> %s {
-        let args = selfTuple(count: %d)""" %
+        let args = PythonTuple(args: [%s])""" %
           (name, classname, name,
-           name, ", ".join(map(lambda arg: arg+": Any", args[1:])), swiftType,
-           len(args)))
-
-    for i in range(1, len(args)):
-        print("        args.set(item: %d, arg: %s)" % (i, args[i]))
+           name, ", ".join(map(lambda arg: arg+": Any", args[1:])),
+           swiftType, ", ".join(["self"]+args[1:])))
 
     print("""        return %s.%sMethod.call(args: args)%s
     }""" % (classname, name, asCall))

@@ -17,31 +17,38 @@ c.array = [1,2,3]
 c.array
 
 c.callme(closure: {
-    (args: [PythonObject]) -> PythonObject in
+    (args: [PythonObject]) -> PythonObject? in
     print(args[0].asString)
     return c
-}, str: "Hello Swift1")
+}, str: "Hello Swift called from Python")
 
-func callback(_ args: [PythonObject]) -> PythonObject {
+func callback(args: [PythonObject]) -> PythonObject? {
     print(args[0].asString)
     return Complex(11.0, 22.0)
 }
 
-c.callme(callback, "Hello Swift2")
+c.callme(callback, "Hello Swift called from Python2")
 
 PythonObject(any: "123").asString
 
-let list = PythonList()
+let list = PythonList<String>()
 list.append("123")
 list.append("234")
 list.append("345")
-list[2] = PythonObject(any: "456")
+list[2] = "456"
 list.asArray(of: String.self)
 
-let dict = PythonDict()
-dict.set("ABC", 123)
-dict["DEF"] = PythonObject(any: 456)
+let dict = PythonDict<Int>()
+dict["ABC"] = 123
+dict["DEF"] = 456
 dict.asDictionary(of: Int.self)
+dict.asTypeDictionary
+dict.asDictionary
+dict
+
+let l: [Any] = ["a", 123, "b", 234]
+let d = PythonDict<Int>(array: l).asDictionary
+PythonList<Any>(dictionary: d).asTypeArray
 
 PythonObject(any: [1, 2, 3]).asArray(of: Int.self)
 PythonObject(any: [1, 2, 3]).asArray(of: Double.self)

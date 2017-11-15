@@ -5,6 +5,30 @@
 
 import sys
 
+# Dance necessary to call back to Swift
+class SwiftClosure:
+
+    def __init__(self, closure):
+        self.callback = sys.modules["swift"].callback
+        self.closure = closure
+        pass
+
+    def __enter__(self):
+        return self
+
+    def call(self, args):
+        # callback expects closure and argument list
+        return self.callback(self.closure, args)
+
+    def deallocate(self):
+        """ Swift returns Void """
+        # Callback with args as None to deallocate
+        self.call(None)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.deallocate()
+
+# Our test class
 class Complex:
     """ Swift var classvar: String Swift var array: [Double]
         Swift var r: Double Swift var i: Double """
@@ -39,13 +63,8 @@ class Complex:
 
     def callme(self, closure, str):
         """ Swift returns [String: Double] """
-        # Dance necessary to call back to Swift
-        callback = sys.modules["swift"].callback
-        # callback expects closure and argument list
-        out = callback(closure, [str]).toDictionary()
-        # deallocate the closure when you're done
-        callback(closure, None)
-        return out
+        with SwiftClosure(closure) as closure:
+            return closure.call([str]).toDictionary()
 
 def newComplex(real, imag):
     """ Swift returns Complex """
