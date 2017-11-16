@@ -13,9 +13,6 @@ class SwiftClosure:
         self.closure = closure
         pass
 
-    def __enter__(self):
-        return self
-
     def call(self, args):
         # callback expects closure and argument list
         return self.callback(self.closure, args)
@@ -25,7 +22,7 @@ class SwiftClosure:
         # Callback with args as None to deallocate
         self.call(None)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __del__(self):
         self.deallocate()
 
 # Our test class
@@ -58,13 +55,13 @@ class Complex:
         return {'real': self.r, 'imag': self.i}
 
     def echoArray(self, value):
-        """ Swift returns [Int] """
+        """ Swift returns PythonList<Int> """
         return value
 
     def callme(self, closure, str):
         """ Swift returns [String: Double] """
-        with SwiftClosure(closure) as closure:
-            return closure.call([str]).toDictionary()
+        closure = SwiftClosure(closure)
+        return closure.call([str]).toDictionary()
 
 def newComplex(real, imag):
     """ Swift returns Complex """

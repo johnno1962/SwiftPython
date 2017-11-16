@@ -80,12 +80,12 @@ public class Complex: PythonObject {
 
     private static let echoArrayMethod = ComplexClass.method(named: "echoArray")
 
-    public func echoArray(value: Any) -> [Int] {
+    public func echoArray(value: Any) -> PythonList<Int> {
         let args = PythonTuple(args: [self, value])
-        return Complex.echoArrayMethod.call(args: args).asArray(of: Int.self)
+        return Complex.echoArrayMethod.call(args: args).asPythonObject(of: PythonList<Int>.self)
     }
 
-    public func echoArray(_ value: Any) -> [Int] {
+    public func echoArray(_ value: Any) -> PythonList<Int> {
         return echoArray(value: value)
     }
 
@@ -123,22 +123,11 @@ public class SwiftClosure: PythonObject {
         super.init(object)
     }
 
-    private static let __enter__Method = SwiftClosureClass.method(named: "__enter__")
+    private static let __del__Method = SwiftClosureClass.method(named: "__del__")
 
-    public func __enter__() -> PythonObject {
+    public func __del__() -> PythonObject {
         let args = PythonTuple(args: [self])
-        return SwiftClosure.__enter__Method.call(args: args)
-    }
-
-    private static let __exit__Method = SwiftClosureClass.method(named: "__exit__")
-
-    public func __exit__(exc_type: Any, exc_val: Any, exc_tb: Any) -> PythonObject {
-        let args = PythonTuple(args: [self, exc_type, exc_val, exc_tb])
-        return SwiftClosure.__exit__Method.call(args: args)
-    }
-
-    public func __exit__(_ exc_type: Any, _ exc_val: Any, _ exc_tb: Any) -> PythonObject {
-        return __exit__(exc_type: exc_type, exc_val: exc_val, exc_tb: exc_tb)
+        return SwiftClosure.__del__Method.call(args: args)
     }
 
     public init(closure: Any) {
