@@ -9,7 +9,7 @@
 # Should be used in conjunction with support code:
 # SwiftPython.playground/Sources/PythonSupport.swift
 #
-#  $Id: //depot/SwiftPython/bridgegen.py#20 $
+#  $Id: //depot/SwiftPython/bridgegen.py#25 $
 #
 
 import inspect
@@ -66,16 +66,15 @@ def genfunction(module, name, func):
     (swiftType, asCall) = asTypes(func)
 
     print("""
-private let %sFunction = PythonFunction(%sModule.getAttr(named: "%s"))
+private let %sFunction = %sModule.function(named: "%s")
 
 public func %s(%s) -> %s {
-    let args = PythonTuple(args: [%s])""" %
+    let args = PythonTuple(args: [%s])
+    return %sFunction.call(args: args)%s
+}""" %
           (name, module, name,
            name, ", ".join(map(lambda arg: arg+": Any", args)),
-           swiftType, ", ".join(args)))
-
-    print("""    return %sFunction.call(args: args)%s
-}""" % (name, asCall))
+           swiftType, ", ".join(args), name, asCall))
 
     if len(args) > 0:
         print("""
@@ -87,13 +86,13 @@ public func %s(%s) -> %s {
 
 def genclass(module, classname, clazz):
     print("""
-public let %sClass = PythonClass(module: %sModule, named: "%s")
+public let %sClass = PythonClass(module: %sModule, named: "%s", type: %s.self)
 
 public class %s: PythonObject {
 
-    public required init(_ object: PythonObject) {
-        super.init(object)
-    }""" % (classname, module, classname, classname))
+    public required init(any: Any) {
+        super.init(any: any)
+    }""" % (classname, module, classname, classname, classname))
 
     if clazz.__doc__:
         for name, swiftType in re.findall(r"Swift var (\w+): (\[[^\]]+\]|\w+(?:<\w+>)?)", clazz.__doc__):
@@ -129,12 +128,11 @@ def geninit(classname, name, func):
     args = args[1:]
     print("""
     public init(%s) {
-        let args = PythonTuple(args: [%s])""" %
+        let args = PythonTuple(args: [%s])
+        super.init(any: %sClass.call(args: args))
+    }""" %
           (", ".join(map(lambda arg: arg+": Any", args)),
-           ", ".join(args)))
-
-    print("""        super.init(%sClass.call(args: args))
-    }""" % (classname))
+           ", ".join(args), classname))
 
     if len(args) > 0:
         print("""
@@ -153,13 +151,13 @@ def genmethod(classname, name, func):
     private static let %sMethod = %sClass.method(named: "%s")
 
     public func %s(%s) -> %s {
-        let args = PythonTuple(args: [%s])""" %
+        let args = PythonTuple(args: [%s])
+        return %s.%sMethod.call(args: args)%s
+    }""" %
           (name, classname, name,
            name, ", ".join(map(lambda arg: arg+": Any", args[1:])),
-           swiftType, ", ".join(["self"]+args[1:])))
-
-    print("""        return %s.%sMethod.call(args: args)%s
-    }""" % (classname, name, asCall))
+           swiftType, ", ".join(["self"]+args[1:]),
+           classname, name, asCall))
 
     if len(args) > 1:
         print("""

@@ -2,6 +2,7 @@
 
 import Foundation
 var str = "Hello, python integration"
+import Python
 
 let _pythonWarn = pythonWarn
 pythonWarn = {
@@ -12,6 +13,7 @@ pythonWarn = {
 
 // class Complex is implemented in python
 
+Complex.classvar
 Complex.classvar = "Python"
 Complex.classvar
 
@@ -23,7 +25,6 @@ c.r
 
 c.array = [1,2,3]
 c.array
-
 c.toArray()
 c.toDictionary()
 
@@ -58,6 +59,7 @@ dict["DEF"] = 456
 dict.asDictionary(of: Int.self)
 dict.asTypeDictionary
 dict.asDictionary
+dict.keys
 dict
 
 for (key, value) in dict {
@@ -84,3 +86,9 @@ PythonAny(any: ["a": 1.0, "b": 2.0, "c": [1,2,3]])["c"]?[1].asInt
 let start = Date()
 (c.echoArray(value: Array(0 ..< 1_000_000)).asIntArray)[1000]
 print(Date().timeIntervalSince(start))
+
+PythonObject(any: [c, c]).asArray(of: Complex.self)[1]
+    .callme(callback, "Swift function called from Python")
+let cc = (PythonObject(any: [c, c]).asAny(of: [Any].self) as! [Complex])
+cc[1].callme(callback, "Swift function called from Python")
+cc[1].asAny(of: Any.self)

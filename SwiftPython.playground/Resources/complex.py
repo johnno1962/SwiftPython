@@ -60,8 +60,7 @@ class Complex:
 
     def callme(self, closure, str):
         """ Swift returns [String: Double] """
-        closure = SwiftClosure(closure)
-        return closure.call([str]).toDictionary()
+        return SwiftClosure(closure).call([str]).toDictionary()
 
 def newComplex(real, imag):
     """ Swift returns Complex """

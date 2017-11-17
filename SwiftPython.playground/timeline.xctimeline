@@ -3,7 +3,12 @@
    version = "3.0">
    <TimelineItems>
       <LoggerValueHistoryTimelineItem
-         documentLocation = "file:///Users/johnholdsworth/Developer/SwiftPython/SwiftPython.playground#CharacterRangeLen=66&amp;CharacterRangeLoc=2012&amp;EndingColumnNumber=0&amp;EndingLineNumber=82&amp;StartingColumnNumber=0&amp;StartingLineNumber=81&amp;Timestamp=532521379.049747"
+         documentLocation = "file:///Users/johnholdsworth/Developer/SwiftPython/SwiftPython.playground#CharacterRangeLen=66&amp;CharacterRangeLoc=2056&amp;EndingColumnNumber=3&amp;EndingLineNumber=85&amp;StartingColumnNumber=4&amp;StartingLineNumber=83&amp;Timestamp=532649084.279115"
+         selectedRepresentationIndex = "0"
+         shouldTrackSuperviewWidth = "NO">
+      </LoggerValueHistoryTimelineItem>
+      <LoggerValueHistoryTimelineItem
+         documentLocation = "file:///Users/johnholdsworth/Developer/SwiftPython/SwiftPython.playground#CharacterRangeLen=274&amp;CharacterRangeLoc=2239&amp;EndingColumnNumber=0&amp;EndingLineNumber=94&amp;StartingColumnNumber=0&amp;StartingLineNumber=88&amp;Timestamp=532649084.279272"
          selectedRepresentationIndex = "0"
          shouldTrackSuperviewWidth = "NO">
       </LoggerValueHistoryTimelineItem>

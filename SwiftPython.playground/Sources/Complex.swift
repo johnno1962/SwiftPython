@@ -3,12 +3,12 @@
 
 public let complexModule = PythonModule(named: "complex")
 
-public let ComplexClass = PythonClass(module: complexModule, named: "Complex")
+public let ComplexClass = PythonClass(module: complexModule, named: "Complex", type: Complex.self)
 
 public class Complex: PythonObject {
 
-    public required init(_ object: PythonObject) {
-        super.init(object)
+    public required init(any: Any) {
+        super.init(any: any)
     }
 
     public class var classvar: String {
@@ -49,7 +49,7 @@ public class Complex: PythonObject {
 
     public init(realpart: Any, imagpart: Any) {
         let args = PythonTuple(args: [realpart, imagpart])
-        super.init(ComplexClass.call(args: args))
+        super.init(any: ComplexClass.call(args: args))
     }
 
     public convenience init(_ realpart: Any, _ imagpart: Any) {
@@ -115,12 +115,12 @@ public class Complex: PythonObject {
     }
 }
 
-public let SwiftClosureClass = PythonClass(module: complexModule, named: "SwiftClosure")
+public let SwiftClosureClass = PythonClass(module: complexModule, named: "SwiftClosure", type: SwiftClosure.self)
 
 public class SwiftClosure: PythonObject {
 
-    public required init(_ object: PythonObject) {
-        super.init(object)
+    public required init(any: Any) {
+        super.init(any: any)
     }
 
     private static let __del__Method = SwiftClosureClass.method(named: "__del__")
@@ -132,7 +132,7 @@ public class SwiftClosure: PythonObject {
 
     public init(closure: Any) {
         let args = PythonTuple(args: [closure])
-        super.init(SwiftClosureClass.call(args: args))
+        super.init(any: SwiftClosureClass.call(args: args))
     }
 
     public convenience init(_ closure: Any) {
@@ -158,7 +158,7 @@ public class SwiftClosure: PythonObject {
     }
 }
 
-private let newComplexFunction = PythonFunction(complexModule.getAttr(named: "newComplex"))
+private let newComplexFunction = complexModule.function(named: "newComplex")
 
 public func newComplex(real: Any, imag: Any) -> Complex {
     let args = PythonTuple(args: [real, imag])
