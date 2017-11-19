@@ -5,7 +5,7 @@
 //  Created by John Holdsworth on 12/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
-//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#110 $
+//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#112 $
 //
 //  Support for Python bridge classes
 //
@@ -170,15 +170,15 @@ public class PythonObject: CustomStringConvertible {
 
     /// For performance
     public var asIntArray: [Int] {
-        return (0 ..< PythonList<Int>(any: self).size).map { PyInt_AsLong(PyList_GetItem(pyObject, $0)) }
+        return (0 ..< PythonList<Int>(any: self).size).map { PyList_GetItem(pyObject, $0)?.asInt ?? pythonWasNull }
     }
 
     public var asFloatArray: [Float] {
-        return (0 ..< PythonList<Float>(any: self).size).map { Float(PyFloat_AsDouble(PyList_GetItem(pyObject, $0))) }
+        return (0 ..< PythonList<Float>(any: self).size).map { Float(PyList_GetItem(pyObject, $0)?.asDouble ?? Double(pythonWasNull)) }
     }
 
     public var asDoubleArray: [Double] {
-        return (0 ..< PythonList<Double>(any: self).size).map { PyFloat_AsDouble(PyList_GetItem(pyObject, $0)) }
+        return (0 ..< PythonList<Double>(any: self).size).map { PyList_GetItem(pyObject, $0)?.asDouble ?? Double(pythonWasNull) }
     }
 
     public func listMap<T>(closure: (PyObjectPtr) -> T) -> [T] {
@@ -383,6 +383,7 @@ public class PythonTuple: PythonObject {
 /// - Parameter arg: Swift data type
 /// - Returns: Python Object, unowned
 public func PythonEncode(_ arg: Any) -> UnownedPyObjectPtr {
+    _ = PythonModule.initialize
     if let value = arg as? Int {
         return PyInt_FromLong(value)
     } else if let value = arg as? Double {
