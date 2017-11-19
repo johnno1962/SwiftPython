@@ -3,12 +3,17 @@
    version = "3.0">
    <TimelineItems>
       <LoggerValueHistoryTimelineItem
-         documentLocation = "file:///Users/johnholdsworth/Developer/SwiftPython/SwiftPython.playground#CharacterRangeLen=66&amp;CharacterRangeLoc=2056&amp;EndingColumnNumber=3&amp;EndingLineNumber=85&amp;StartingColumnNumber=4&amp;StartingLineNumber=83&amp;Timestamp=532649084.279115"
+         documentLocation = "file:///Users/johnholdsworth/Developer/SwiftPython/SwiftPython.playground#CharacterRangeLen=68&amp;CharacterRangeLoc=2123&amp;EndingColumnNumber=5&amp;EndingLineNumber=88&amp;StartingColumnNumber=4&amp;StartingLineNumber=86&amp;Timestamp=532815799.220613"
          selectedRepresentationIndex = "0"
          shouldTrackSuperviewWidth = "NO">
       </LoggerValueHistoryTimelineItem>
       <LoggerValueHistoryTimelineItem
-         documentLocation = "file:///Users/johnholdsworth/Developer/SwiftPython/SwiftPython.playground#CharacterRangeLen=274&amp;CharacterRangeLoc=2239&amp;EndingColumnNumber=0&amp;EndingLineNumber=94&amp;StartingColumnNumber=0&amp;StartingLineNumber=88&amp;Timestamp=532649084.279272"
+         documentLocation = "file:///Users/johnholdsworth/Developer/SwiftPython/SwiftPython.playground#CharacterRangeLen=293&amp;CharacterRangeLoc=2185&amp;EndingColumnNumber=17&amp;EndingLineNumber=97&amp;StartingColumnNumber=0&amp;StartingLineNumber=87&amp;Timestamp=532815799.220812"
+         selectedRepresentationIndex = "0"
+         shouldTrackSuperviewWidth = "NO">
+      </LoggerValueHistoryTimelineItem>
+      <LoggerValueHistoryTimelineItem
+         documentLocation = "file:///Users/johnholdsworth/Developer/SwiftPython/SwiftPython.playground#CharacterRangeLen=164&amp;CharacterRangeLoc=2575&amp;EndingColumnNumber=0&amp;EndingLineNumber=104&amp;StartingColumnNumber=0&amp;StartingLineNumber=100&amp;Timestamp=532815799.221013"
          selectedRepresentationIndex = "0"
          shouldTrackSuperviewWidth = "NO">
       </LoggerValueHistoryTimelineItem>

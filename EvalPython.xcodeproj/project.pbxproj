@@ -1,0 +1,357 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 48;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BB6369271FBFED30005FF522 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6369261FBFED30005FF522 /* AppDelegate.swift */; };
+		BB6369291FBFED30005FF522 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6369281FBFED30005FF522 /* Document.swift */; };
+		BB63692C1FBFED30005FF522 /* Document.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB63692A1FBFED30005FF522 /* Document.xib */; };
+		BB63692E1FBFED30005FF522 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB63692D1FBFED30005FF522 /* Assets.xcassets */; };
+		BB6369311FBFED30005FF522 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB63692F1FBFED30005FF522 /* MainMenu.xib */; };
+		BBDA48191FBFF0D5005BA59C /* SwiftEval.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDA48181FBFF0D5005BA59C /* SwiftEval.swift */; };
+		BBDA481C1FBFF2B8005BA59C /* StackTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDA481A1FBFF2B8005BA59C /* StackTrace.swift */; };
+		BBDA481D1FBFF2B8005BA59C /* PythonSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDA481B1FBFF2B8005BA59C /* PythonSupport.swift */; };
+		BBDA481F1FBFF3A2005BA59C /* Complex.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDA481E1FBFF3A2005BA59C /* Complex.swift */; };
+		BBDA48211FBFF7B3005BA59C /* complex.py in Resources */ = {isa = PBXBuildFile; fileRef = BBDA48201FBFF7B3005BA59C /* complex.py */; };
+		BBDA48231FC001B8005BA59C /* App.icns in Resources */ = {isa = PBXBuildFile; fileRef = BBDA48221FC001B8005BA59C /* App.icns */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		BB6369231FBFED30005FF522 /* EvalPython.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EvalPython.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB6369261FBFED30005FF522 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		BB6369281FBFED30005FF522 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
+		BB63692B1FBFED30005FF522 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/Document.xib; sourceTree = "<group>"; };
+		BB63692D1FBFED30005FF522 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BB6369301FBFED30005FF522 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		BB6369321FBFED30005FF522 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BB6369331FBFED30005FF522 /* EvalPython.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EvalPython.entitlements; sourceTree = "<group>"; };
+		BBDA48181FBFF0D5005BA59C /* SwiftEval.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftEval.swift; sourceTree = "<group>"; };
+		BBDA481A1FBFF2B8005BA59C /* StackTrace.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = StackTrace.swift; path = SwiftPython.playground/Sources/StackTrace.swift; sourceTree = SOURCE_ROOT; };
+		BBDA481B1FBFF2B8005BA59C /* PythonSupport.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PythonSupport.swift; path = SwiftPython.playground/Sources/PythonSupport.swift; sourceTree = SOURCE_ROOT; };
+		BBDA481E1FBFF3A2005BA59C /* Complex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Complex.swift; path = SwiftPython.playground/Sources/Complex.swift; sourceTree = SOURCE_ROOT; };
+		BBDA48201FBFF7B3005BA59C /* complex.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = complex.py; path = SwiftPython.playground/Resources/complex.py; sourceTree = SOURCE_ROOT; };
+		BBDA48221FC001B8005BA59C /* App.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = App.icns; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BB6369201FBFED30005FF522 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		BB63691A1FBFED30005FF522 = {
+			isa = PBXGroup;
+			children = (
+				BB6369251FBFED30005FF522 /* EvalPython */,
+				BB6369241FBFED30005FF522 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BB6369241FBFED30005FF522 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BB6369231FBFED30005FF522 /* EvalPython.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BB6369251FBFED30005FF522 /* EvalPython */ = {
+			isa = PBXGroup;
+			children = (
+				BBDA48221FC001B8005BA59C /* App.icns */,
+				BB6369261FBFED30005FF522 /* AppDelegate.swift */,
+				BB6369281FBFED30005FF522 /* Document.swift */,
+				BBDA48181FBFF0D5005BA59C /* SwiftEval.swift */,
+				BBDA481A1FBFF2B8005BA59C /* StackTrace.swift */,
+				BBDA481B1FBFF2B8005BA59C /* PythonSupport.swift */,
+				BBDA481E1FBFF3A2005BA59C /* Complex.swift */,
+				BBDA48201FBFF7B3005BA59C /* complex.py */,
+				BB63692A1FBFED30005FF522 /* Document.xib */,
+				BB63692D1FBFED30005FF522 /* Assets.xcassets */,
+				BB63692F1FBFED30005FF522 /* MainMenu.xib */,
+				BB6369321FBFED30005FF522 /* Info.plist */,
+				BB6369331FBFED30005FF522 /* EvalPython.entitlements */,
+			);
+			path = EvalPython;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BB6369221FBFED30005FF522 /* EvalPython */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB6369361FBFED30005FF522 /* Build configuration list for PBXNativeTarget "EvalPython" */;
+			buildPhases = (
+				BB63691F1FBFED30005FF522 /* Sources */,
+				BB6369201FBFED30005FF522 /* Frameworks */,
+				BB6369211FBFED30005FF522 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EvalPython;
+			productName = EvalPython;
+			productReference = BB6369231FBFED30005FF522 /* EvalPython.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BB63691B1FBFED30005FF522 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0910;
+				LastUpgradeCheck = 0910;
+				ORGANIZATIONNAME = "John Holdsworth";
+				TargetAttributes = {
+					BB6369221FBFED30005FF522 = {
+						CreatedOnToolsVersion = 9.1;
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
+					};
+				};
+			};
+			buildConfigurationList = BB63691E1FBFED30005FF522 /* Build configuration list for PBXProject "EvalPython" */;
+			compatibilityVersion = "Xcode 8.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = BB63691A1FBFED30005FF522;
+			productRefGroup = BB6369241FBFED30005FF522 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BB6369221FBFED30005FF522 /* EvalPython */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BB6369211FBFED30005FF522 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB63692E1FBFED30005FF522 /* Assets.xcassets in Resources */,
+				BBDA48211FBFF7B3005BA59C /* complex.py in Resources */,
+				BB63692C1FBFED30005FF522 /* Document.xib in Resources */,
+				BBDA48231FC001B8005BA59C /* App.icns in Resources */,
+				BB6369311FBFED30005FF522 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BB63691F1FBFED30005FF522 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BBDA481C1FBFF2B8005BA59C /* StackTrace.swift in Sources */,
+				BBDA48191FBFF0D5005BA59C /* SwiftEval.swift in Sources */,
+				BBDA481D1FBFF2B8005BA59C /* PythonSupport.swift in Sources */,
+				BB6369291FBFED30005FF522 /* Document.swift in Sources */,
+				BBDA481F1FBFF3A2005BA59C /* Complex.swift in Sources */,
+				BB6369271FBFED30005FF522 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		BB63692A1FBFED30005FF522 /* Document.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BB63692B1FBFED30005FF522 /* Base */,
+			);
+			name = Document.xib;
+			sourceTree = "<group>";
+		};
+		BB63692F1FBFED30005FF522 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BB6369301FBFED30005FF522 /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		BB6369341FBFED30005FF522 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Debug;
+		};
+		BB6369351FBFED30005FF522 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+			};
+			name = Release;
+		};
+		BB6369371FBFED30005FF522 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 9V5A8WE85E;
+				INFOPLIST_FILE = EvalPython/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.johnholdsworth.EvalPython;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
+			};
+			name = Debug;
+		};
+		BB6369381FBFED30005FF522 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 9V5A8WE85E;
+				INFOPLIST_FILE = EvalPython/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.johnholdsworth.EvalPython;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BB63691E1FBFED30005FF522 /* Build configuration list for PBXProject "EvalPython" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB6369341FBFED30005FF522 /* Debug */,
+				BB6369351FBFED30005FF522 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BB6369361FBFED30005FF522 /* Build configuration list for PBXNativeTarget "EvalPython" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB6369371FBFED30005FF522 /* Debug */,
+				BB6369381FBFED30005FF522 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BB63691B1FBFED30005FF522 /* Project object */;
+}

@@ -9,7 +9,7 @@
 # Should be used in conjunction with support code:
 # SwiftPython.playground/Sources/PythonSupport.swift
 #
-#  $Id: //depot/SwiftPython/bridgegen.py#25 $
+#  $Id: //depot/SwiftPython/bridgegen.py#28 $
 #
 
 import inspect
@@ -53,7 +53,7 @@ def asCall(swiftType):
 def asTypes(obj):
     if obj.__doc__ == None:
         return ("PythonObject", "")
-    returns = re.search(r"Swift returns (\[[^\]]+\]|\w+(?:<\w+>)?)", obj.__doc__)
+    returns = re.search(r"Swift returns (\[[^\]]+\]|\w+(?:<[^>]+>)?)", obj.__doc__)
     if returns == None:
         return ("PythonObject", "")
 
@@ -95,7 +95,7 @@ public class %s: PythonObject {
     }""" % (classname, module, classname, classname, classname))
 
     if clazz.__doc__:
-        for name, swiftType in re.findall(r"Swift var (\w+): (\[[^\]]+\]|\w+(?:<\w+>)?)", clazz.__doc__):
+        for name, swiftType in re.findall(r"Swift var (\w+): (\[[^\]]+\]|\w+(?:<[^>]+>)?)", clazz.__doc__):
             if getattr(clazz, name, None):
                 cvar = "class "
                 avar = classname+"Class."

@@ -14,13 +14,14 @@ public func backtrace(_ stack: UnsafeMutablePointer<UnsafeMutableRawPointer?>!, 
 public func backtrace_symbols(_ stack: UnsafePointer<UnsafeMutableRawPointer?>!, _ frame: Int32) -> UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>!
 
 extension String {
-    subscript(range: NSRange) -> String? {
+    fileprivate subscript(range: NSRange) -> String? {
         return range.location != NSNotFound ? String(self[Range(range, in: self)!]) : nil
     }
 }
 
-public func dumpStrackTrace() {
+public func dumpStrackTrace() -> String {
     var callstack = [UnsafeMutableRawPointer?](repeating: nil, count: 128)
+    var stackTrace = ""
 
     let frames = backtrace(&callstack, Int32(callstack.count))
     if let symbols = backtrace_symbols(&callstack, frames) {
@@ -30,13 +31,45 @@ public func dumpStrackTrace() {
             let symbol = String(cString: symbols[frame]!)
             if let match = regexp.firstMatch(in: symbol, options: [], range: NSMakeRange(0, symbol.utf16.count)) {
                 let symbol = _stdlib_demangleName(symbol[match.range(at: 1)]!)
-                print(symbol)
+                stackTrace += symbol + "\n"
                 if symbol == "main" {
                     break
                 }
             }
         }
         free(symbols)
+    }
+
+    return stackTrace
+}
+
+@_silgen_name ("setjmp")
+public func setjump(_: UnsafeMutablePointer<UInt8>!) -> Int32
+
+@_silgen_name ("longjmp")
+public func longjump(_: UnsafeMutablePointer<UInt8>!, _: Int32) -> Never
+
+private var trap_buf = [UInt8](repeating: 0, count: MemoryLayout<jmp_buf>.size)
+
+public var swiftTrapHandler = {
+    (signal: Int32)  in
+    print("Signal \(signal)")
+    print(dumpStrackTrace())
+}
+
+private func defaultHandler(signal: Int32) {
+    swiftTrapHandler(signal)
+    longjump(&trap_buf, 1)
+}
+
+public func catchTraps(closure: () -> Void) {
+    signal(SIGABRT, defaultHandler)
+    signal(SIGSEGV, defaultHandler)
+    signal(SIGBUS, defaultHandler)
+    signal(SIGILL, defaultHandler)
+
+    if setjump(&trap_buf) == 0 {
+        closure()
     }
 }
 

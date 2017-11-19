@@ -5,7 +5,7 @@
 //  Created by John Holdsworth on 12/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
-//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#85 $
+//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#110 $
 //
 //  Support for Python bridge classes
 //
@@ -13,13 +13,16 @@
 import Foundation
 import Python
 
+/// Internal Python object pointer
 public typealias PyObjectPtr = UnsafeMutablePointer<PyObject>
-public typealias PythonCallback = (_: [PythonObject]) -> PythonObject?
 public typealias UnownedPyObjectPtr = PyObjectPtr
+
+/// Closure type for calling back to Swift
+public typealias PythonCallback = (_: [PythonObject]) -> PythonObject?
 
 /// Representing Python's "None"
 public let pythonNone = PyObjectPtr(&_Py_NoneStruct)
-public let PythonNone = PythonObject(ptr: pythonNone)
+public let PythonNone = PythonObject(any: pythonNone)
 
 /// Used if a sensible value can not be returned for asInt, asDouble etc
 public var pythonWasNull = -999
@@ -29,6 +32,17 @@ public var pythonWasNull = -999
 public var pythonWarn = {
     (message: String) in
     print(message)
+}
+
+/// Execute a string of python code in the interpretor
+///
+/// - Parameter python: string of valid Python
+public func pythonEval(code python: String) {
+    _ = PythonModule.initialize
+    PyRun_SimpleStringFlags(python, nil)
+    if let _ = PyErr_Occurred() {
+        PyErr_Print()
+    }
 }
 
 /// Wrapper for all Python objects received or created
@@ -41,26 +55,23 @@ public class PythonObject: CustomStringConvertible {
     /// - Parameters:
     ///   - pyObject: pointer to underlying Python object
     ///   - steal: "Steal" the object i.e. don't increment it's referrence count
-    fileprivate init(ptr pyObject: PyObjectPtr?, steal: Bool = false) {
-        self.pyObject = pyObject ?? pythonNone
-        if !steal || pyObject == nil {
-            Py_IncRef(self.pyObject)
-        }
+    fileprivate init(steal ptr: PyObjectPtr?) {
+        pyObject = ptr ?? PythonNone.takeReference()
     }
 
     /// Required initialiser used for most manual initialisation
     ///
     /// - Parameter any: Almost any Swift structure or another Python object
     public required init(any: Any) {
-        self.pyObject = PythonEncode(any)
+        pyObject = PythonEncode(any)
     }
 
     /// Check downcasts for the expected type
     ///
     /// - Parameter intended: pointer to Python type structure for type  expected
     public func checkCast(type intended: UnsafeMutablePointer<PyTypeObject>) {
-        if pyObject.type != intended {
-            pythonWarn("Invalid cast of \(String(cString: pyObject.type.pointee.tp_name)) to \(self)")
+        if pyObject.pyType != intended {
+            pythonWarn("Invalid cast of \(String(cString: pyObject.pyType.pointee.tp_name)) to \(self)")
         }
     }
 
@@ -77,9 +88,10 @@ public class PythonObject: CustomStringConvertible {
     /// - Parameter name: name of attribute
     /// - Returns: new PythonObject representing attribute
     public func getAttr(named name: String) -> PythonObject {
-        return PythonObject(ptr: PyObject_GetAttrString(pyObject, name), steal: true)
+        return pyObject == pythonNone || PyObject_HasAttrString(pyObject, name) == 0 ?
+                PythonNone : PythonObject(steal: PyObject_GetAttrString(pyObject, name))
     }
-    
+
     /// Set new value for attribute
     ///
     /// - Parameters:
@@ -98,9 +110,9 @@ public class PythonObject: CustomStringConvertible {
     public func withPtr<T>(closure: (_: PyObjectPtr) -> T) -> T {
         return closure(pyObject)
     }
-    
-    public var type: UnsafeMutablePointer<PyTypeObject> {
-        return pyObject.type
+
+    public var pyType: UnsafeMutablePointer<PyTypeObject> {
+        return pyObject.pyType
     }
 
     public var isNone: Bool {
@@ -131,54 +143,65 @@ public class PythonObject: CustomStringConvertible {
         return
     }
 
-    public var asType: Any {
-        return pyObject.asType
-    }
-
-    public func asAny<T>(of type: T.Type) -> Any {
-        return pyObject.asAny(of: type)
+    public func asAny<T>(of type: T.Type) -> T {
+        return pyObject.asAny(of: type) as! T
     }
 
     public func asArray<T>(of type: T.Type) -> [T] {
         return PythonList<T>(any: self).asArray
     }
 
-    /// For mixed value tyeps
+    public func asDictionary<T>(of type: T.Type) -> [String: T] {
+        return PythonDict<T>(any: self).asDictionary
+    }
+
+    /// Mixed value types
+    public var asType: Any {
+        return pyObject.asType
+    }
+
     public var asTypeArray: [Any] {
-        return (0 ..< PythonList<Any>(any: self).size).map { PyList_GetItem(pyObject, $0).asType }
+        return PythonList<Any>(any: self).asTypeArray
+    }
+
+    public var asTypeDictionary: [String: Any] {
+        return PythonDict<Any>(any: self).asTypeDictionary
     }
 
     /// For performance
     public var asIntArray: [Int] {
-        return (0 ..< PythonList<Int>(any: self).size).map { PyList_GetItem(pyObject, $0).asInt }
+        return (0 ..< PythonList<Int>(any: self).size).map { PyInt_AsLong(PyList_GetItem(pyObject, $0)) }
     }
 
     public var asFloatArray: [Float] {
-        return (0 ..< PythonList<Float>(any: self).size).map { Float(PyList_GetItem(pyObject, $0).asDouble) }
+        return (0 ..< PythonList<Float>(any: self).size).map { Float(PyFloat_AsDouble(PyList_GetItem(pyObject, $0))) }
     }
 
     public var asDoubleArray: [Double] {
-        return (0 ..< PythonList<Double>(any: self).size).map { PyList_GetItem(pyObject, $0).asDouble }
+        return (0 ..< PythonList<Double>(any: self).size).map { PyFloat_AsDouble(PyList_GetItem(pyObject, $0)) }
     }
 
     public func listMap<T>(closure: (PyObjectPtr) -> T) -> [T] {
         return (0 ..< PythonList<T>(any: self).size).map { closure(PyList_GetItem(pyObject, $0)) }
     }
 
-    public func asDictionary<T>(of type: T.Type) -> [String: T] {
-        return PythonDict<T>(any: self).asDictionary
-    }
-    
-    public var asTypeDictionary: [String: Any] {
-        return PythonDict<Any>(any: self).asTypeDictionary
-    }
-    
     /// Create an instance of the specified subclass of Python Object
     ///
     /// - Parameter type: class object
     /// - Returns: New instance of that class
     public func asPythonObject<T: PythonObject>(of type: T.Type) -> T {
         return type.init(any: self)
+    }
+
+    public var asPythonInstance: PythonObject {
+        if pyType == &PyInstance_Type {
+            let wrapped = PythonObject(any: self).getAttr(named: "__class__").getAttr(named: "__swift__type__")
+            if !wrapped.isNone {
+                let swiftClass = unsafeBitCast(PyLong_AsVoidPtr(wrapped.pyObject), to: PythonObject.Type.self)
+                return PythonObject(any: self).asPythonObject(of: swiftClass)
+            }
+        }
+        return self
     }
 
     /// For working with recursive data structures such as JSON
@@ -201,7 +224,7 @@ public class PythonModule: PythonObject {
     }()
 
     public required init(any: Any) {
-        self.name = ""
+        name = ""
         super.init(any: any)
         checkCast(type: &PyModule_Type)
     }
@@ -223,11 +246,11 @@ public class PythonModule: PythonObject {
     ///   - name: module name
     ///   - path: directory to add to PYTHONPATH
     public init(module name: String, path: String?) {
-        if var path = path {
-            if let existing = getenv("PYTHONPATH"), !String(cString: existing).contains(path) {
-                path = "\(path):\(String(cString: existing))"
-            }
-            setenv("PYTHONPATH", path, 1)
+        if let path = path {
+            pythonEval(code: """
+                import sys
+                sys.path.insert(1, "\(path)")
+                """)
         }
 
         /// Boot up Python (Once!)
@@ -235,11 +258,11 @@ public class PythonModule: PythonObject {
 
         guard let module = PyImport_Import(PyString_FromString(name)) else {
             PyErr_Print()
-            fatalError("Could not module \(name) at \(String(cString: getenv("PYTHONPATH")))")
+            fatalError("Could not module \(name) in path \(String(cString: getenv("PYTHONPATH")))")
         }
 
         self.name = name
-        super.init(ptr: module)
+        super.init(any: module)
     }
 
     /// Get function defined in this module
@@ -263,7 +286,7 @@ public class PythonFunction: PythonObject {
         if let _ = PyErr_Occurred() {
             PyErr_Print()
         }
-        return PythonObject(ptr: result, steal: true)
+        return PythonObject(steal: result)
     }
 }
 
@@ -273,7 +296,7 @@ public class PythonClass: PythonFunction {
     public let name: String
 
     public required init(any: Any) {
-        self.name = ""
+        name = ""
         super.init(any: any)
         checkCast(type: &PyClass_Type)
     }
@@ -292,8 +315,8 @@ public class PythonClass: PythonFunction {
         self.name = name
         super.init(any: clazz)
 
-        let pyType = PyLong_FromVoidPtr(unsafeBitCast(type, to: UnsafeMutableRawPointer.self))
-        clazz.setAttr(named: "__swift__type__", value: PythonObject(ptr: pyType, steal: true))
+        let wrapped = PyLong_FromVoidPtr(unsafeBitCast(type, to: UnsafeMutableRawPointer.self))
+        clazz.setAttr(named: "__swift__type__", value: PythonObject(steal: wrapped))
     }
 
     /// Find a method in the associated class
@@ -319,7 +342,7 @@ public class PythonTuple: PythonObject {
 
     public init(count: Int) {
         _ = PythonModule.initialize
-        super.init(ptr: PyTuple_New(count), steal: true)
+        super.init(steal: PyTuple_New(count))
     }
 
     public convenience init(args: [Any]) {
@@ -333,12 +356,12 @@ public class PythonTuple: PythonObject {
         return PyTuple_Size(pyObject)
     }
 
-    public func set(item: Int, ptr: UnownedPyObjectPtr) {
+    public func set(item: Int, steal ptr: UnownedPyObjectPtr) {
         PyTuple_SetItem(pyObject, item, ptr)
     }
 
     public func set(item: Int, arg: Any) {
-        set(item: item, ptr: PythonEncode(arg))
+        set(item: item, steal: PythonEncode(arg))
     }
 
     public subscript(index: Int) -> PyObjectPtr {
@@ -358,7 +381,7 @@ public class PythonTuple: PythonObject {
 /// to a newly created Python Object. Will also accept another PythonObject
 ///
 /// - Parameter arg: Swift data type
-/// - Returns: Python Object, currently unowned
+/// - Returns: Python Object, unowned
 public func PythonEncode(_ arg: Any) -> UnownedPyObjectPtr {
     if let value = arg as? Int {
         return PyInt_FromLong(value)
@@ -370,6 +393,9 @@ public func PythonEncode(_ arg: Any) -> UnownedPyObjectPtr {
         return value.withUnsafeBytes { PyByteArray_FromStringAndSize($0, value.count) }
     } else if let value = arg as? PythonObject {
         return value.takeReference()
+    } else if let value = arg as? PyObjectPtr {
+        Py_IncRef(value)
+        return value
     } else if let value = arg as? [Int] {
         let list = PyList_New(value.count)!
         for index in 0 ..< value.count {
@@ -418,7 +444,11 @@ extension UnsafeMutablePointer where Pointee == PyObject {
     }
 
     public var description: String {
-        return PythonObject(ptr: PyObject_Repr(self), steal: true).asString
+        return PythonObject(steal: PyObject_Repr(self)).asString
+    }
+
+    public var pyType: UnsafeMutablePointer<PyTypeObject> {
+        return pointee.ob_type
     }
 
     public var asInt: Int {
@@ -426,7 +456,7 @@ extension UnsafeMutablePointer where Pointee == PyObject {
             pythonWarn("asInt from empty object, returning \(pythonWasNull)")
             return pythonWasNull
         }
-        if type == &PyString_Type {
+        if pyType == &PyString_Type {
             let tmpInt = PyInt_FromString(PyString_AsString(self), nil, 0)
             let tmpLong = PyInt_AsLong(tmpInt)
             Py_DecRef(tmpInt)
@@ -440,7 +470,7 @@ extension UnsafeMutablePointer where Pointee == PyObject {
             pythonWarn("asDouble from empty object, returning \(pythonWasNull)")
             return Double(pythonWasNull)
         }
-        if type == &PyString_Type {
+        if pyType == &PyString_Type {
             let tmpDouble = PyFloat_FromString(self, nil)
             defer { Py_DecRef(tmpDouble) }
             return PyFloat_AsDouble(tmpDouble)
@@ -453,7 +483,7 @@ extension UnsafeMutablePointer where Pointee == PyObject {
             pythonWarn("asString from empty object, returning \(pythonWasNull)")
             return "\(pythonWasNull)"
         }
-        return type == &PyString_Type ?
+        return pyType == &PyString_Type ?
             String(cString: PyString_AsString(self)) : description
     }
 
@@ -471,44 +501,6 @@ extension UnsafeMutablePointer where Pointee == PyObject {
         return
     }
 
-    public var type: UnsafeMutablePointer<PyTypeObject> {
-        return pointee.ob_type
-    }
-
-    /// Although this returns Any it tries to create an appropriate value
-    /// for the Python object by checking it's Type structure pointer
-    public var asType: Any {
-        let type = self.type
-        if type == &PyInt_Type {
-            return asInt
-        } else if type == &PyFloat_Type {
-            return asDouble
-        } else if type == &PyString_Type {
-            return asString
-        } else if type == &PyByteArray_Type {
-            return asData
-        } else if type == &PyModule_Type {
-            return PythonModule(any: PythonObject(ptr: self))
-        } else if type == &PyFunction_Type {
-            return PythonFunction(any: PythonObject(ptr: self))
-        } else if type == &PyClass_Type {
-            return PythonClass(any: PythonObject(ptr: self))
-        } else if type == &PyTuple_Type {
-            return PythonTuple(any: PythonObject(ptr: self))
-        } else if type == &PyList_Type {
-            return PythonObject(ptr: self).asTypeArray
-        } else if type == &PyDict_Type {
-            return PythonObject(ptr: self).asTypeDictionary
-        } else if type == &PyInstance_Type {
-            let typeObject = PythonObject(ptr: self).getAttr(named: "__class__").getAttr(named: "__swift__type__")
-            if !typeObject.isNone {
-                let swiftType = unsafeBitCast(PyLong_AsVoidPtr(typeObject.pyObject), to: PythonObject.Type.self)
-                return PythonObject(ptr: self).asPythonObject(of: swiftType)
-            }
-        }
-        return PythonObject(ptr: self)
-    }
-
     /// Set value of required type which can include PythonObject or collections
     ///
     /// - Parameter type: Swift type object
@@ -522,26 +514,72 @@ extension UnsafeMutablePointer where Pointee == PyObject {
             return asString
         } else if type == Data.self {
             return asData
+        } else if type == PythonObject.self {
+            return PythonObject(any: self).asPythonInstance
         } else if let subtype = type as? PythonObject.Type {
-            return PythonObject(ptr: self).asPythonObject(of: subtype)
+            return PythonObject(any: self).asPythonObject(of: subtype)
         } else if type == [Int].self {
-            return PythonObject(ptr: self).asIntArray
+            return PythonObject(any: self).asIntArray
         } else if type == [Float].self {
-            return PythonObject(ptr: self).asFloatArray
+            return PythonObject(any: self).asFloatArray
         } else if type == [Double].self {
-            return PythonObject(ptr: self).asDoubleArray
+            return PythonObject(any: self).asDoubleArray
         } else if type == [String].self {
-            return PythonObject(ptr: self).asArray(of: String.self)
+            return PythonList<String>(any: self).asArray
         } else if type == [Data].self {
-            return PythonObject(ptr: self).asArray(of: Data.self)
+            return PythonList<Data>(any: self).asArray
         } else if type == [PythonObject].self {
-            return PythonObject(ptr: self).asArray(of: PythonObject.self)
+            return PythonList<PythonObject>(any: self).map { $0.asPythonInstance }
+        } else if type == [String: Int].self {
+            return PythonDict<Int>(any: self).asDictionary
+        } else if type == [String: Float].self {
+            return PythonDict<Float>(any: self).asDictionary
+        } else if type == [String: Double].self {
+            return PythonDict<Double>(any: self).asDictionary
+        } else if type == [String: String].self {
+            return PythonDict<String>(any: self).asDictionary
+        } else if type == [String: Data].self {
+            return PythonDict<Data>(any: self).asDictionary
+        } else if type == [String: PythonObject].self {
+            return PythonDict<PythonObject>(any: self).asDictionary
         } else if type == [Any].self {
-            return PythonObject(ptr: self).asTypeArray
-        } else if type == Any.self {
-            return PythonObject(ptr: self).asType
+            return PythonObject(any: self).asTypeArray
+        } else if type == [String: Any].self {
+            return PythonObject(any: self).asTypeDictionary
         }
-        return PythonObject(ptr: self)
+        return asType
+    }
+
+    /// Although this returns Any it tries to create an appropriate value
+    /// for the Python object by checking it's Type structure pointer
+    public var asType: Any {
+        let pyType = self.pyType
+        if pyType == &PyInt_Type {
+            return asInt
+        } else if pyType == &PyFloat_Type {
+            return asDouble
+        } else if pyType == &PyString_Type {
+            return asString
+        } else if pyType == &PyByteArray_Type {
+            return asData
+        } else if pyType == &PyList_Type {
+            return PythonObject(any: self).asTypeArray
+        } else if pyType == &PyDict_Type {
+            return PythonObject(any: self).asTypeDictionary
+        } else if pyType == &PyInstance_Type {
+            return PythonObject(any: self).asPythonInstance
+        } else if pyType == &PyModule_Type {
+            return PythonModule(any: self)
+        } else if pyType == &PyFunction_Type {
+            return PythonFunction(any: self)
+        } else if pyType == &PyClass_Type {
+            return PythonClass(any: self)
+        } else if pyType == &PyTuple_Type {
+            return PythonTuple(any: self)
+        } else if self == pythonNone {
+            return PythonNone
+        }
+        return PythonObject(any: self)
     }
 }
 
@@ -553,7 +591,7 @@ public class PythonList<T>: PythonObject, Sequence, Collection {
     }
 
     public init() {
-        super.init(ptr: PyList_New(0), steal: true)
+        super.init(steal: PyList_New(0))
     }
 
     /// Initialise a list from the keys and values of a dictionary
@@ -562,7 +600,7 @@ public class PythonList<T>: PythonObject, Sequence, Collection {
     public convenience init(dictionary: Any) {
         self.init()
         let dict = PythonDict<T>(any: dictionary)
-        if dict.type != &PyDict_Type {
+        if dict.pyType != &PyDict_Type {
             pythonWarn("Initialiser is not Dictionary creating PythonList")
         }
         let keys = PyDict_Keys(dict.pyObject)
@@ -578,7 +616,14 @@ public class PythonList<T>: PythonObject, Sequence, Collection {
     }
 
     public var asArray: [T] {
+        if T.self == Int.self || T.self == Float.self || T.self == Double.self {
+            return asAny(of: [T].self)
+        }
         return map { $0 }
+    }
+
+    public override var asTypeArray: [Any] {
+        return (0 ..< size).map { PyList_GetItem(pyObject, $0).asType }
     }
 
     public func append(_ item: T) {
@@ -592,10 +637,14 @@ public class PythonList<T>: PythonObject, Sequence, Collection {
             if index < 0 || index >= size {
                 pythonWarn("PythonList: Index \(index) out of range [\(size)]")
             }
-            return PyList_GetItem(pyObject, index).asAny(of: T.self) as! T
+            return (PyList_GetItem(pyObject, index) ?? pythonNone).asAny(of: T.self) as! T
         }
         set(newValue) {
-            PyList_SetItem(pyObject, index, PythonEncode(newValue))
+            if index == size {
+                append(newValue)
+            } else {
+                PyList_SetItem(pyObject, index, PythonEncode(newValue))
+            }
         }
     }
 
@@ -624,7 +673,7 @@ public class PythonList<T>: PythonObject, Sequence, Collection {
     public func makeIterator() -> Iterator {
         var iterator = Listerator<T>(list: self)
         return AnyIterator {
-            return iterator.next()
+            iterator.next()
         }
     }
 
@@ -652,7 +701,7 @@ public class PythonDict<T>: PythonObject, Sequence {
     }
 
     public init() {
-        super.init(ptr: PyDict_New(), steal: true)
+        super.init(steal: PyDict_New())
     }
 
     /// Initialise dictionary from keys and values in an array
@@ -661,40 +710,40 @@ public class PythonDict<T>: PythonObject, Sequence {
     public convenience init(array: Any) {
         self.init()
         let list = PythonEncode(array)
-        if list.type != &PyList_Type {
+        if list.pyType != &PyList_Type {
             pythonWarn("Initialiser is not Array creating PythonDict")
         }
         let count = PyList_Size(list)
         if count % 2 != 0 {
             pythonWarn("Odd number of elements in array creating PythonDict")
         }
-        for i in stride(from: 0, to: count-1, by: 2) {
-            PyDict_SetItem(pyObject, PyList_GetItem(list, i), PyList_GetItem(list, i+1))
+        for i in stride(from: 0, to: count - 1, by: 2) {
+            PyDict_SetItem(pyObject, PyList_GetItem(list, i), PyList_GetItem(list, i + 1))
         }
         Py_DecRef(list)
     }
 
     public var keys: [String] {
-        return PythonObject(ptr: PyDict_Keys(pyObject), steal: true).asArray(of: String.self)
+        return PythonObject(steal: PyDict_Keys(pyObject)).asArray(of: String.self)
     }
 
-    public var asDictionary:  [String: T] {
+    public var asDictionary: [String: T] {
         var out = [String: T]()
         let keys = PyDict_Keys(pyObject)
         for key in (0 ..< PyList_Size(keys)).map({ PyList_GetItem(keys, $0) }) {
             out[String(cString: PyString_AsString(key))]
-                = PyDict_GetItem(pyObject, key).asAny(of: T.self) as? T
+                = (PyDict_GetItem(pyObject, key) ?? pythonNone).asAny(of: T.self) as? T
         }
         Py_DecRef(keys)
         return out
     }
 
-    public override var asTypeDictionary:  [String: Any] {
+    public override var asTypeDictionary: [String: Any] {
         var out = [String: Any]()
         let keys = PyDict_Keys(pyObject)
         for key in (0 ..< PyList_Size(keys)).map({ PyList_GetItem(keys, $0) }) {
             out[String(cString: PyString_AsString(key))]
-                = PyDict_GetItem(pyObject, key).asType
+                = (PyDict_GetItem(pyObject, key) ?? pythonNone).asType
         }
         Py_DecRef(keys)
         return out
@@ -715,8 +764,7 @@ public class PythonDict<T>: PythonObject, Sequence {
                 let value = PythonEncode(newValue)
                 PyDict_SetItem(pyObject, key, value)
                 Py_DecRef(value)
-            }
-            else {
+            } else {
                 PyDict_DelItem(pyObject, key)
             }
             Py_DecRef(key)
@@ -750,7 +798,7 @@ public class PythonDict<T>: PythonObject, Sequence {
     public func makeIterator() -> Iterator {
         var iterator = Dicterator<T>(dict: self)
         return AnyIterator {
-            return iterator.next()
+            iterator.next()
         }
     }
 }
@@ -766,12 +814,11 @@ fileprivate func swiftCallback(_ self: PyObjectPtr?, _ args: PyObjectPtr?) -> Un
         let closure = Unmanaged<PythonClosure>.fromOpaque(pointer).takeUnretainedValue()
         if let args = PyTuple_GetItem(args, 1) {
             if args != pythonNone {
-                let args = PythonObject(ptr: args).asArray(of: PythonObject.self)
+                let args = PythonObject(any: args).asAny(of: [PythonObject].self)
                 if let result = closure.closure(args) {
                     return result.takeReference()
                 }
-            }
-            else {
+            } else {
                 Unmanaged.passUnretained(closure).release()
             }
         }
@@ -803,7 +850,7 @@ fileprivate class PythonClosure {
 
     init(closure: @escaping PythonCallback) {
         _ = PythonClosure.initialize
-       self.closure = closure
+        self.closure = closure
     }
 
     var closureObject: UnownedPyObjectPtr {
@@ -814,11 +861,11 @@ fileprivate class PythonClosure {
 /// SwiftyJSON like Omi-type to make working with
 /// recursive data structures a little bit easier
 public class PythonAny: PythonObject {
-    public var list: PythonList<Any> {
-        return PythonList<Any>(any: self)
+    public var list: PythonList<PythonAny> {
+        return PythonList<PythonAny>(any: self)
     }
-    public var dict: PythonDict<Any> {
-        return PythonDict<Any>(any: self)
+    public var dict: PythonDict<PythonAny> {
+        return PythonDict<PythonAny>(any: self)
     }
     public var count: Int {
         return list.size
@@ -827,12 +874,19 @@ public class PythonAny: PythonObject {
         return dict.keys
     }
     public subscript(index: Int) -> PythonAny {
-        return PythonAny(any: list[index])
+        get {
+            return list[index]
+        }
+        set(newValue) {
+            list[index] = newValue
+        }
     }
     public subscript(key: String) -> PythonAny? {
-        if let next = dict[key] {
-            return PythonAny(any: next)
+        get {
+            return dict[key]
         }
-        return nil
+        set(newValue) {
+            dict[key] = newValue
+        }
     }
 }

@@ -2,13 +2,12 @@
 
 import Foundation
 var str = "Hello, python integration"
-import Python
 
 let _pythonWarn = pythonWarn
 pythonWarn = {
     (_ message: String) in
     _pythonWarn(message)
-    dumpStrackTrace()
+    print(dumpStrackTrace())
 }
 
 // class Complex is implemented in python
@@ -32,14 +31,14 @@ c.callme(closure: {
     (args: [PythonObject]) -> PythonObject? in
     print(args[0].asString)
     return c
-}, str: "Swift closure called from Python")
+}, str: "Swift closure called from Python called from Swift")
 
 func callback(args: [PythonObject]) -> PythonObject? {
     print(args[0].asString)
     return Complex(11.0, 22.0)
 }
 
-c.callme(callback, "Swift function called from Python")
+c.callme(callback, "Swift function called from Python called from Swift")
 
 print(newComplex(real: 123, imag: 456).toString(extra: c.toDictionary()))
 print(newComplex(123, 456).toString(extra: c.toDictionary()))
@@ -50,8 +49,12 @@ let list = PythonList<String>()
 list.append("123")
 list.append("234")
 list.append("345")
-list[2] = "456"
+list[3] = "456"
 list.asArray(of: String.self)
+
+for item in list {
+    print(item)
+}
 
 let dict = PythonDict<Int>()
 dict["ABC"] = 123
@@ -87,8 +90,20 @@ let start = Date()
 (c.echoArray(value: Array(0 ..< 1_000_000)).asIntArray)[1000]
 print(Date().timeIntervalSince(start))
 
+let start1 = Date()
+(c.echoArray(value: Array(0 ..< 1_000_000)).asArray(of: Int.self))[1000]
+print(Date().timeIntervalSince(start1))
+
+let start2 = Date()
+(c.echoArray(value: Array(0 ..< 1_000_000)).asAny(of: [Int].self))[1000]
+print(Date().timeIntervalSince(start2))
+
+let d = PythonObject(any: ["list": Array(0 ..< 100)]).asAny(of: [String: [Int]].self)
+d["list"]![4]
+
+PythonDict<[Int]>(any: ["list": Array(0 ..< 100)])["list"]![4]
+
 PythonObject(any: [c, c]).asArray(of: Complex.self)[1]
     .callme(callback, "Swift function called from Python")
-let cc = (PythonObject(any: [c, c]).asAny(of: [Any].self) as! [Complex])
-cc[1].callme(callback, "Swift function called from Python")
-cc[1].asAny(of: Any.self)
+PythonObject(any: [c, c]).asAny(of: [Complex].self)[1]
+    .callme(callback, "Swift function called from Python")
