@@ -11,6 +11,9 @@
       location = "group:bridgegen.py">
    </FileRef>
    <FileRef
+      location = "group:SwiftPython.podspec">
+   </FileRef>
+   <FileRef
       location = "group:SwiftPython.playground">
    </FileRef>
    <FileRef

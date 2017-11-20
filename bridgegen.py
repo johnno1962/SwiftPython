@@ -9,7 +9,7 @@
 # Should be used in conjunction with support code:
 # SwiftPython.playground/Sources/PythonSupport.swift
 #
-#  $Id: //depot/SwiftPython/bridgegen.py#28 $
+#  $Id: //depot/SwiftPython/bridgegen.py#30 $
 #
 
 import inspect
@@ -69,12 +69,11 @@ def genfunction(module, name, func):
 private let %sFunction = %sModule.function(named: "%s")
 
 public func %s(%s) -> %s {
-    let args = PythonTuple(args: [%s])
-    return %sFunction.call(args: args)%s
+    return %sFunction.call(args: [%s])%s
 }""" %
           (name, module, name,
            name, ", ".join(map(lambda arg: arg+": Any", args)),
-           swiftType, ", ".join(args), name, asCall))
+           swiftType, name, ", ".join(args), asCall))
 
     if len(args) > 0:
         print("""
@@ -128,11 +127,10 @@ def geninit(classname, name, func):
     args = args[1:]
     print("""
     public init(%s) {
-        let args = PythonTuple(args: [%s])
-        super.init(any: %sClass.call(args: args))
+        super.init(any: %sClass.call(args: [%s]))
     }""" %
           (", ".join(map(lambda arg: arg+": Any", args)),
-           ", ".join(args), classname))
+           classname, ", ".join(args)))
 
     if len(args) > 0:
         print("""
@@ -148,16 +146,14 @@ def genmethod(classname, name, func):
     (swiftType, asCall) = asTypes(func)
 
     print("""
-    private static let %sMethod = %sClass.method(named: "%s")
+    private static let %sMethod = %sClass.function(named: "%s")
 
     public func %s(%s) -> %s {
-        let args = PythonTuple(args: [%s])
-        return %s.%sMethod.call(args: args)%s
+        return %s.%sMethod.call(args: [%s])%s
     }""" %
           (name, classname, name,
            name, ", ".join(map(lambda arg: arg+": Any", args[1:])),
-           swiftType, ", ".join(["self"]+args[1:]),
-           classname, name, asCall))
+           swiftType, classname, name, ", ".join(["self"]+args[1:]), asCall))
 
     if len(args) > 1:
         print("""

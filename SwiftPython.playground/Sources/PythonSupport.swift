@@ -5,7 +5,7 @@
 //  Created by John Holdsworth on 12/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
-//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#112 $
+//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#128 $
 //
 //  Support for Python bridge classes
 //
@@ -20,9 +20,10 @@ public typealias UnownedPyObjectPtr = PyObjectPtr
 /// Closure type for calling back to Swift
 public typealias PythonCallback = (_: [PythonObject]) -> PythonObject?
 
-/// Representing Python's "None"
+/// Representing Python's "None" & "True"
 public let pythonNone = PyObjectPtr(&_Py_NoneStruct)
 public let PythonNone = PythonObject(any: pythonNone)
+public let PythonTrue = PythonObject(steal: PyBool_FromLong(1))
 
 /// Used if a sensible value can not be returned for asInt, asDouble etc
 public var pythonWasNull = -999
@@ -115,12 +116,16 @@ public class PythonObject: CustomStringConvertible {
         return pyObject.pyType
     }
 
+    public var description: String {
+        return pyObject.description
+    }
+
     public var isNone: Bool {
         return pyObject.isNone
     }
 
-    public var description: String {
-        return pyObject.description
+    public var asBool: Bool {
+        return pyObject.asBool
     }
 
     public var asInt: Int {
@@ -143,6 +148,10 @@ public class PythonObject: CustomStringConvertible {
         return
     }
 
+    /// You should only need the first of these
+    ///
+    /// - Parameter type: a Swift type
+    /// - Returns: a value in that type
     public func asAny<T>(of type: T.Type) -> T {
         return pyObject.asAny(of: type) as! T
     }
@@ -193,6 +202,7 @@ public class PythonObject: CustomStringConvertible {
         return type.init(any: self)
     }
 
+    /// Create an instance of a generated PythonObject subclass
     public var asPythonInstance: PythonObject {
         if pyType == &PyInstance_Type {
             let wrapped = PythonObject(any: self).getAttr(named: "__class__").getAttr(named: "__swift__type__")
@@ -207,6 +217,14 @@ public class PythonObject: CustomStringConvertible {
     /// For working with recursive data structures such as JSON
     public var asPythonAny: PythonAny {
         return PythonAny(any: self)
+    }
+
+    /// Get function defined on this object
+    ///
+    /// - Parameter name: name of function
+    /// - Returns: Object representing function that can be called
+    public func function(named name: String) -> PythonFunction {
+        return PythonFunction(any: getAttr(named: name))
     }
 
     deinit {
@@ -264,14 +282,6 @@ public class PythonModule: PythonObject {
         self.name = name
         super.init(any: module)
     }
-
-    /// Get function defined in this module
-    ///
-    /// - Parameter name: name of function
-    /// - Returns: Object representing function tat can be called
-    public func function(named name: String) -> PythonFunction {
-        return PythonFunction(any: getAttr(named: name))
-    }
 }
 
 /// Wrapper for a Python function object
@@ -281,8 +291,8 @@ public class PythonFunction: PythonObject {
     ///
     /// - Parameter args: arguments for the function
     /// - Returns: return value from calling the function
-    public func call(args: PythonTuple) -> PythonObject {
-        let result = args.withPtr { PyObject_Call(pyObject, $0, nil) }
+    public func call(args: [Any]) -> PythonObject {
+        let result = PythonTuple(args: args).withPtr { PyObject_Call(pyObject, $0, nil) }
         if let _ = PyErr_Occurred() {
             PyErr_Print()
         }
@@ -317,18 +327,6 @@ public class PythonClass: PythonFunction {
 
         let wrapped = PyLong_FromVoidPtr(unsafeBitCast(type, to: UnsafeMutableRawPointer.self))
         clazz.setAttr(named: "__swift__type__", value: PythonObject(steal: wrapped))
-    }
-
-    /// Find a method in the associated class
-    ///
-    /// - Parameter name: the method name
-    /// - Returns: An object wrapping a Python function
-    public func method(named name: String) -> PythonFunction {
-        let method = getAttr(named: name)
-        guard !method.isNone else {
-            fatalError("Unable to find method \(name) in class \(self.name)")
-        }
-        return PythonFunction(any: method)
     }
 }
 
@@ -384,16 +382,8 @@ public class PythonTuple: PythonObject {
 /// - Returns: Python Object, unowned
 public func PythonEncode(_ arg: Any) -> UnownedPyObjectPtr {
     _ = PythonModule.initialize
-    if let value = arg as? Int {
-        return PyInt_FromLong(value)
-    } else if let value = arg as? Double {
-        return PyFloat_FromDouble(value)
-    } else if let value = arg as? String {
-        return PyString_FromString(value)
-    } else if let value = arg as? Data {
-        return value.withUnsafeBytes { PyByteArray_FromStringAndSize($0, value.count) }
-    } else if let value = arg as? PythonObject {
-        return value.takeReference()
+    if let value = arg as? PythonConvertible {
+        return value.toPython
     } else if let value = arg as? PyObjectPtr {
         Py_IncRef(value)
         return value
@@ -437,12 +427,55 @@ public func PythonEncode(_ arg: Any) -> UnownedPyObjectPtr {
     return PythonNone.takeReference()
 }
 
+/// A protocol for the Swift types that can be converted to Python Objects
+public protocol PythonConvertible {
+    var toPython: UnownedPyObjectPtr { get }
+}
+
+extension PythonObject: PythonConvertible {
+    public var toPython: UnownedPyObjectPtr {
+        return takeReference()
+    }
+}
+
+extension Int: PythonConvertible {
+    public var toPython: UnownedPyObjectPtr {
+        return PyInt_FromLong(self)
+    }
+}
+
+extension Float: PythonConvertible {
+    public var toPython: UnownedPyObjectPtr {
+        return PyFloat_FromDouble(Double(self))
+    }
+}
+
+extension Double: PythonConvertible {
+    public var toPython: UnownedPyObjectPtr {
+        return PyFloat_FromDouble(self)
+    }
+}
+
+extension String: PythonConvertible {
+    public var toPython: UnownedPyObjectPtr {
+        return PyString_FromString(self)
+    }
+}
+
+extension Data: PythonConvertible {
+    public var toPython: UnownedPyObjectPtr {
+        return withUnsafeBytes { PyByteArray_FromStringAndSize($0, count) }
+    }
+}
+
+extension Bool: PythonConvertible {
+    public var toPython: UnownedPyObjectPtr {
+        return PyBool_FromLong(self ? 1 : 0)
+    }
+}
+
 // Extension to perform most conversions from Python object to basic Swift types
 extension UnsafeMutablePointer where Pointee == PyObject {
-
-    public var isNone: Bool {
-        return self == pythonNone
-    }
 
     public var description: String {
         return PythonObject(steal: PyObject_Repr(self)).asString
@@ -450,6 +483,14 @@ extension UnsafeMutablePointer where Pointee == PyObject {
 
     public var pyType: UnsafeMutablePointer<PyTypeObject> {
         return pointee.ob_type
+    }
+
+    public var isNone: Bool {
+        return self == pythonNone
+    }
+
+    public var asBool: Bool {
+        return self == PythonTrue.pyObject
     }
 
     public var asInt: Int {
@@ -468,7 +509,7 @@ extension UnsafeMutablePointer where Pointee == PyObject {
 
     public var asDouble: Double {
         if isNone {
-            pythonWarn("asDouble from empty object, returning \(pythonWasNull)")
+            pythonWarn("asDouble from empty object, returning \(pythonWasNull).0")
             return Double(pythonWasNull)
         }
         if pyType == &PyString_Type {
@@ -481,7 +522,7 @@ extension UnsafeMutablePointer where Pointee == PyObject {
 
     public var asString: String {
         if isNone {
-            pythonWarn("asString from empty object, returning \(pythonWasNull)")
+            pythonWarn("asString from empty object, returning \"\(pythonWasNull)\"")
             return "\(pythonWasNull)"
         }
         return pyType == &PyString_Type ?
@@ -515,6 +556,8 @@ extension UnsafeMutablePointer where Pointee == PyObject {
             return asString
         } else if type == Data.self {
             return asData
+        } else if type == Bool.self {
+            return asBool
         } else if type == PythonObject.self {
             return PythonObject(any: self).asPythonInstance
         } else if let subtype = type as? PythonObject.Type {
@@ -529,6 +572,8 @@ extension UnsafeMutablePointer where Pointee == PyObject {
             return PythonList<String>(any: self).asArray
         } else if type == [Data].self {
             return PythonList<Data>(any: self).asArray
+        } else if type == [Bool].self {
+            return PythonList<Bool>(any: self).asArray
         } else if type == [PythonObject].self {
             return PythonList<PythonObject>(any: self).map { $0.asPythonInstance }
         } else if type == [String: Int].self {
@@ -541,6 +586,8 @@ extension UnsafeMutablePointer where Pointee == PyObject {
             return PythonDict<String>(any: self).asDictionary
         } else if type == [String: Data].self {
             return PythonDict<Data>(any: self).asDictionary
+        } else if type == [String: Bool].self {
+            return PythonDict<Bool>(any: self).asDictionary
         } else if type == [String: PythonObject].self {
             return PythonDict<PythonObject>(any: self).asDictionary
         } else if type == [Any].self {
@@ -563,6 +610,8 @@ extension UnsafeMutablePointer where Pointee == PyObject {
             return asString
         } else if pyType == &PyByteArray_Type {
             return asData
+        } else if pyType == &PyBool_Type {
+            return asBool
         } else if pyType == &PyList_Type {
             return PythonObject(any: self).asTypeArray
         } else if pyType == &PyDict_Type {
@@ -580,7 +629,7 @@ extension UnsafeMutablePointer where Pointee == PyObject {
         } else if self == pythonNone {
             return PythonNone
         }
-        return PythonObject(any: self)
+        return PythonAny(any: self)
     }
 }
 

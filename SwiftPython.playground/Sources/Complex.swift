@@ -48,66 +48,59 @@ public class Complex: PythonObject {
     }
 
     public init(realpart: Any, imagpart: Any) {
-        let args = PythonTuple(args: [realpart, imagpart])
-        super.init(any: ComplexClass.call(args: args))
+        super.init(any: ComplexClass.call(args: [realpart, imagpart]))
     }
 
     public convenience init(_ realpart: Any, _ imagpart: Any) {
         self.init(realpart: realpart, imagpart: imagpart)
     }
 
-    private static let addMethod = ComplexClass.method(named: "add")
+    private static let addMethod = ComplexClass.function(named: "add")
 
     public func add(c: Any) -> Void {
-        let args = PythonTuple(args: [self, c])
-        return Complex.addMethod.call(args: args).asVoid
+        return Complex.addMethod.call(args: [self, c]).asVoid
     }
 
     public func add(_ c: Any) -> Void {
         return add(c: c)
     }
 
-    private static let callmeMethod = ComplexClass.method(named: "callme")
+    private static let callmeMethod = ComplexClass.function(named: "callme")
 
     public func callme(closure: Any, str: Any) -> [String: Double] {
-        let args = PythonTuple(args: [self, closure, str])
-        return Complex.callmeMethod.call(args: args).asDictionary(of: Double.self)
+        return Complex.callmeMethod.call(args: [self, closure, str]).asDictionary(of: Double.self)
     }
 
     public func callme(_ closure: Any, _ str: Any) -> [String: Double] {
         return callme(closure: closure, str: str)
     }
 
-    private static let echoArrayMethod = ComplexClass.method(named: "echoArray")
+    private static let echoArrayMethod = ComplexClass.function(named: "echoArray")
 
     public func echoArray(value: Any) -> PythonList<Int> {
-        let args = PythonTuple(args: [self, value])
-        return Complex.echoArrayMethod.call(args: args).asPythonObject(of: PythonList<Int>.self)
+        return Complex.echoArrayMethod.call(args: [self, value]).asPythonObject(of: PythonList<Int>.self)
     }
 
     public func echoArray(_ value: Any) -> PythonList<Int> {
         return echoArray(value: value)
     }
 
-    private static let toArrayMethod = ComplexClass.method(named: "toArray")
+    private static let toArrayMethod = ComplexClass.function(named: "toArray")
 
     public func toArray() -> [Double] {
-        let args = PythonTuple(args: [self])
-        return Complex.toArrayMethod.call(args: args).asArray(of: Double.self)
+        return Complex.toArrayMethod.call(args: [self]).asArray(of: Double.self)
     }
 
-    private static let toDictionaryMethod = ComplexClass.method(named: "toDictionary")
+    private static let toDictionaryMethod = ComplexClass.function(named: "toDictionary")
 
     public func toDictionary() -> [String: Double] {
-        let args = PythonTuple(args: [self])
-        return Complex.toDictionaryMethod.call(args: args).asDictionary(of: Double.self)
+        return Complex.toDictionaryMethod.call(args: [self]).asDictionary(of: Double.self)
     }
 
-    private static let toStringMethod = ComplexClass.method(named: "toString")
+    private static let toStringMethod = ComplexClass.function(named: "toString")
 
     public func toString(extra: Any) -> String {
-        let args = PythonTuple(args: [self, extra])
-        return Complex.toStringMethod.call(args: args).asString
+        return Complex.toStringMethod.call(args: [self, extra]).asString
     }
 
     public func toString(_ extra: Any) -> String {
@@ -123,46 +116,41 @@ public class SwiftClosure: PythonObject {
         super.init(any: any)
     }
 
-    private static let __del__Method = SwiftClosureClass.method(named: "__del__")
+    private static let __del__Method = SwiftClosureClass.function(named: "__del__")
 
     public func __del__() -> PythonObject {
-        let args = PythonTuple(args: [self])
-        return SwiftClosure.__del__Method.call(args: args)
+        return SwiftClosure.__del__Method.call(args: [self])
     }
 
     public init(closure: Any) {
-        let args = PythonTuple(args: [closure])
-        super.init(any: SwiftClosureClass.call(args: args))
+        super.init(any: SwiftClosureClass.call(args: [closure]))
     }
 
     public convenience init(_ closure: Any) {
         self.init(closure: closure)
     }
 
-    private static let callMethod = SwiftClosureClass.method(named: "call")
+    private static let callMethod = SwiftClosureClass.function(named: "call")
 
     public func call(args: Any) -> PythonObject {
-        let args = PythonTuple(args: [self, args])
-        return SwiftClosure.callMethod.call(args: args)
+        return SwiftClosure.callMethod.call(args: [self, args])
     }
 
     public func call(_ args: Any) -> PythonObject {
         return call(args: args)
     }
 
-    private static let deallocateMethod = SwiftClosureClass.method(named: "deallocate")
+    private static let deallocateMethod = SwiftClosureClass.function(named: "deallocate")
 
     public func deallocate() -> Void {
-        let args = PythonTuple(args: [self])
-        return SwiftClosure.deallocateMethod.call(args: args).asVoid
+        return SwiftClosure.deallocateMethod.call(args: [self]).asVoid
     }
 }
 
 private let newComplexFunction = complexModule.function(named: "newComplex")
 
 public func newComplex(real: Any, imag: Any) -> Complex {
-    let args = PythonTuple(args: [real, imag])
-    return newComplexFunction.call(args: args).asPythonObject(of: Complex.self)
+    return newComplexFunction.call(args: [real, imag]).asPythonObject(of: Complex.self)
 }
 
 public func newComplex(_ real: Any, _ imag: Any) -> Complex {
