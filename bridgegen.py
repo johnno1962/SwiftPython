@@ -9,7 +9,7 @@
 # Should be used in conjunction with support code:
 # SwiftPython.playground/Sources/PythonSupport.swift
 #
-#  $Id: //depot/SwiftPython/bridgegen.py#30 $
+#  $Id: //depot/SwiftPython/bridgegen.py#32 $
 #
 
 import inspect
@@ -20,20 +20,21 @@ def main():
     module = sys.argv[1]
 
     if len(sys.argv) > 2:
-        sys.path.append(sys.argv[2])
+        sys.path.insert(1, sys.argv[2])
 
     __import__(module)
 
+    module_name = module.replace(".", "_")
     print("""
 // Generated from module %s by bridgegen.py
 
-public let %sModule = PythonModule(named: "%s")""" % (module, module, module))
+public let %sModule = PythonModule(named: "%s")""" % (module, module_name, module))
 
     for name, obj in inspect.getmembers(sys.modules[module]):
         if inspect.isfunction(obj):
-            genfunction(module, name, obj)
+            genfunction(module_name, name, obj)
         elif inspect.isclass(obj):
-            genclass(module, name, obj)
+            genclass(module_name, name, obj)
 
 
 def asCall(swiftType):
@@ -60,9 +61,15 @@ def asTypes(obj):
     swiftType = returns.group(1)
     return (swiftType, asCall(swiftType))
 
+def reserved(arg):
+    return arg if arg != "func" and arg != "where" else "`"+arg+"`"
+
+def sanitise(args):
+    return ", ".join(map(lambda arg: reserved(arg), args))
 
 def genfunction(module, name, func):
     args = inspect.getargspec(func)[0]
+    defaults = inspect.getargspec(func)[3]
     (swiftType, asCall) = asTypes(func)
 
     print("""
@@ -73,14 +80,14 @@ public func %s(%s) -> %s {
 }""" %
           (name, module, name,
            name, ", ".join(map(lambda arg: arg+": Any", args)),
-           swiftType, name, ", ".join(args), asCall))
+           swiftType, name, sanitise(args), asCall))
 
     if len(args) > 0:
         print("""
 public func %s(%s) -> %s {
     return %s(%s)
 }""" % (name, ", ".join(map(lambda arg: "_ "+arg+": Any", args)), swiftType,
-        name, ", ".join(map(lambda arg: arg+": "+arg, args))))
+        name, ", ".join(map(lambda arg: arg+": "+reserved(arg), args))))
 
 
 def genclass(module, classname, clazz):
@@ -130,7 +137,7 @@ def geninit(classname, name, func):
         super.init(any: %sClass.call(args: [%s]))
     }""" %
           (", ".join(map(lambda arg: arg+": Any", args)),
-           classname, ", ".join(args)))
+           classname, sanitise(args)))
 
     if len(args) > 0:
         print("""
@@ -138,7 +145,7 @@ def geninit(classname, name, func):
         self.init(%s)
     }""" %
           (", ".join(map(lambda arg: "_ "+arg+": Any", args)),
-           ", ".join(map(lambda arg: arg+": "+arg, args))))
+           ", ".join(map(lambda arg: arg+": "+reserved(arg), args))))
 
 
 def genmethod(classname, name, func):
@@ -153,14 +160,14 @@ def genmethod(classname, name, func):
     }""" %
           (name, classname, name,
            name, ", ".join(map(lambda arg: arg+": Any", args[1:])),
-           swiftType, classname, name, ", ".join(["self"]+args[1:]), asCall))
+           swiftType, classname, name, sanitise(["self"]+args[1:]), asCall))
 
     if len(args) > 1:
         print("""
     public func %s(%s) -> %s {
         return %s(%s)
-    }""" % (name, ", ".join(map(lambda arg: "_ "+arg+": Any", args[1:])), swiftType,
-           name, ", ".join(map(lambda arg: arg+": "+arg, args[1:]))))
+    }""" % (name, ", ".join(map(lambda arg: "_ _"+arg+": Any", args[1:])), swiftType,
+           name, ", ".join(map(lambda arg: arg+": "+reserved("_"+arg), args[1:]))))
 
 
 main()

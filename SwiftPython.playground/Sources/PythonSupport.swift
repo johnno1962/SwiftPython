@@ -5,7 +5,7 @@
 //  Created by John Holdsworth on 12/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
-//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#128 $
+//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#129 $
 //
 //  Support for Python bridge classes
 //
@@ -251,11 +251,10 @@ public class PythonModule: PythonObject {
     ///
     /// - Parameter name: module name
     public convenience init(named name: String) {
-        guard let source = Bundle.main.path(forResource: name, ofType: "py") else {
-            fatalError("Could not locate module \(name).py")
-        }
+        let source = Bundle.main.path(forResource: name, ofType: "py")
 
-        self.init(module: name, path: URL(fileURLWithPath: source).deletingLastPathComponent().path)
+        self.init(module: name, path: source == nil ? nil :
+            URL(fileURLWithPath: source!).deletingLastPathComponent().path)
     }
 
     /// Start Python, load a module and create an object to represent it

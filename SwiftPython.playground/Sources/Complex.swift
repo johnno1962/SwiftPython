@@ -61,8 +61,8 @@ public class Complex: PythonObject {
         return Complex.addMethod.call(args: [self, c]).asVoid
     }
 
-    public func add(_ c: Any) -> Void {
-        return add(c: c)
+    public func add(_ _c: Any) -> Void {
+        return add(c: _c)
     }
 
     private static let callmeMethod = ComplexClass.function(named: "callme")
@@ -71,8 +71,8 @@ public class Complex: PythonObject {
         return Complex.callmeMethod.call(args: [self, closure, str]).asDictionary(of: Double.self)
     }
 
-    public func callme(_ closure: Any, _ str: Any) -> [String: Double] {
-        return callme(closure: closure, str: str)
+    public func callme(_ _closure: Any, _ _str: Any) -> [String: Double] {
+        return callme(closure: _closure, str: _str)
     }
 
     private static let echoArrayMethod = ComplexClass.function(named: "echoArray")
@@ -81,8 +81,8 @@ public class Complex: PythonObject {
         return Complex.echoArrayMethod.call(args: [self, value]).asPythonObject(of: PythonList<Int>.self)
     }
 
-    public func echoArray(_ value: Any) -> PythonList<Int> {
-        return echoArray(value: value)
+    public func echoArray(_ _value: Any) -> PythonList<Int> {
+        return echoArray(value: _value)
     }
 
     private static let toArrayMethod = ComplexClass.function(named: "toArray")
@@ -103,8 +103,8 @@ public class Complex: PythonObject {
         return Complex.toStringMethod.call(args: [self, extra]).asString
     }
 
-    public func toString(_ extra: Any) -> String {
-        return toString(extra: extra)
+    public func toString(_ _extra: Any) -> String {
+        return toString(extra: _extra)
     }
 }
 
@@ -136,8 +136,8 @@ public class SwiftClosure: PythonObject {
         return SwiftClosure.callMethod.call(args: [self, args])
     }
 
-    public func call(_ args: Any) -> PythonObject {
-        return call(args: args)
+    public func call(_ _args: Any) -> PythonObject {
+        return call(args: _args)
     }
 
     private static let deallocateMethod = SwiftClosureClass.function(named: "deallocate")
@@ -145,6 +145,16 @@ public class SwiftClosure: PythonObject {
     public func deallocate() -> Void {
         return SwiftClosure.deallocateMethod.call(args: [self]).asVoid
     }
+}
+
+private let mandelbrotFunction = complexModule.function(named: "mandelbrot")
+
+public func mandelbrot(h: Any, w: Any, maxit: Any) -> PythonObject {
+    return mandelbrotFunction.call(args: [h, w, maxit])
+}
+
+public func mandelbrot(_ h: Any, _ w: Any, _ maxit: Any) -> PythonObject {
+    return mandelbrot(h: h, w: w, maxit: maxit)
 }
 
 private let newComplexFunction = complexModule.function(named: "newComplex")
