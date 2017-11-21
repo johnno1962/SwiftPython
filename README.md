@@ -1,6 +1,6 @@
 # SwiftPython - Experiments in bridging Swift to Python.
 
-![Icon](http://johnholdsworth.com/python_swift.png) ![Icon](http://johnholdsworth.com/plot.png?a)
+![Icon](http://johnholdsworth.com/swift_python.png)
 
 Contains a simple playground that uses a class "Complex" that is implemented in Python
 from Swift. There are two [Auxiliary files](http://help.apple.com/xcode/mac/8.0/#/devfa5bea3af)

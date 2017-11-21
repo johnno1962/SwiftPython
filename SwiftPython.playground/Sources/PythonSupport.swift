@@ -5,7 +5,7 @@
 //  Created by John Holdsworth on 12/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
-//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#129 $
+//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#139 $
 //
 //  Support for Python bridge classes
 //
@@ -23,7 +23,8 @@ public typealias PythonCallback = (_: [PythonObject]) -> PythonObject?
 /// Representing Python's "None" & "True"
 public let pythonNone = PyObjectPtr(&_Py_NoneStruct)
 public let PythonNone = PythonObject(any: pythonNone)
-public let PythonTrue = PythonObject(steal: PyBool_FromLong(1))
+public let PythonTrue = PythonObject(any: true)
+public let PythonFalse = PythonObject(any: false)
 
 /// Used if a sensible value can not be returned for asInt, asDouble etc
 public var pythonWasNull = -999
@@ -250,11 +251,11 @@ public class PythonModule: PythonObject {
     /// Used in playgrounds to find module as auxiliary resources
     ///
     /// - Parameter name: module name
-    public convenience init(named name: String) {
+    public convenience init(loading name: String) {
         let source = Bundle.main.path(forResource: name, ofType: "py")
 
-        self.init(module: name, path: source == nil ? nil :
-            URL(fileURLWithPath: source!).deletingLastPathComponent().path)
+        self.init(named: name, path:
+            source.flatMap { URL(fileURLWithPath: $0).deletingLastPathComponent().path })
     }
 
     /// Start Python, load a module and create an object to represent it
@@ -262,7 +263,10 @@ public class PythonModule: PythonObject {
     /// - Parameters:
     ///   - name: module name
     ///   - path: directory to add to PYTHONPATH
-    public init(module name: String, path: String?) {
+    public init(named name: String, path: String? = nil) {
+        /// Boot up Python (Once!)
+        _ = PythonModule.initialize
+
         if let path = path {
             pythonEval(code: """
                 import sys
@@ -270,16 +274,13 @@ public class PythonModule: PythonObject {
                 """)
         }
 
-        /// Boot up Python (Once!)
-        _ = PythonModule.initialize
-
         guard let module = PyImport_Import(PyString_FromString(name)) else {
             PyErr_Print()
             fatalError("Could not module \(name) in path \(String(cString: getenv("PYTHONPATH")))")
         }
 
         self.name = name
-        super.init(any: module)
+        super.init(steal: module)
     }
 }
 
@@ -290,10 +291,14 @@ public class PythonFunction: PythonObject {
     ///
     /// - Parameter args: arguments for the function
     /// - Returns: return value from calling the function
-    public func call(args: [Any]) -> PythonObject {
-        let result = PythonTuple(args: args).withPtr { PyObject_Call(pyObject, $0, nil) }
+    public func call(args: [Any?], kw: [String: Any]? = nil) -> PythonObject {
+        let kw = kw.flatMap { PythonEncode($0) }
+        let result = PythonTuple(args: args).withPtr { PyObject_Call(pyObject, $0, kw) }
         if let _ = PyErr_Occurred() {
             PyErr_Print()
+        }
+        if kw != nil {
+            Py_DecRef(kw)
         }
         return PythonObject(steal: result)
     }
@@ -342,10 +347,10 @@ public class PythonTuple: PythonObject {
         super.init(steal: PyTuple_New(count))
     }
 
-    public convenience init(args: [Any]) {
+    public convenience init(args: [Any?]) {
         self.init(count: args.count)
         for i in 0 ..< args.count {
-            PyTuple_SetItem(pyObject, i, PythonEncode(args[i]))
+            PyTuple_SetItem(pyObject, i, args[i].flatMap { PythonEncode($0) } ?? pythonNone )
         }
     }
 
@@ -419,7 +424,7 @@ public func PythonEncode(_ arg: Any) -> UnownedPyObjectPtr {
         }
         return dict
     } else if let value = arg as? PythonCallback {
-        return PythonClosure(closure: value).closureObject
+        return PythonClosure(closure: value).takeReference()
     }
 
     pythonWarn("PythonEncode: Could not match type of \(arg), returning PythonNone")
@@ -891,19 +896,38 @@ fileprivate var methods: [PyMethodDef] = {
 /// integer from which the pointer to an instance of this class is recovered.
 fileprivate class PythonClosure {
 
-    private static let initialize: Void = {
+    private static let wrapper: PythonFunction = {
         Py_InitModule4_64("swift", &methods, nil, nil, PYTHON_API_VERSION)
+        PyRun_SimpleStringFlags("""
+            import sys
+
+            # Dance necessary to call back to Swift
+            class SwiftClosure:
+
+                def __init__(self, closure):
+                    self.callback = sys.modules["swift"].callback
+                    self.closure = closure
+
+                def __call__(self, *args):
+                    # callback expects closure and argument as list
+                    return self.callback(self.closure, list(args))
+
+                def __del__(self):
+                    self.callback(self.closure, None)
+
+            """, nil)
+        return PythonModule(named: "__main__").function(named: "SwiftClosure")
     }()
 
     let closure: PythonCallback
 
     init(closure: @escaping PythonCallback) {
-        _ = PythonClosure.initialize
         self.closure = closure
     }
 
-    var closureObject: UnownedPyObjectPtr {
-        return PyLong_FromVoidPtr(Unmanaged.passRetained(self).toOpaque())
+    func takeReference() -> UnownedPyObjectPtr {
+        let wrapped = PythonObject(steal: PyLong_FromVoidPtr(Unmanaged.passRetained(self).toOpaque()))
+        return PythonClosure.wrapper.call(args: [wrapped]).takeReference()
     }
 }
 

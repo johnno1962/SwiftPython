@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB585D401FC3BFAE0038882D /* pyplot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB585D3F1FC3BFAC0038882D /* pyplot.swift */; };
 		BB6369271FBFED30005FF522 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6369261FBFED30005FF522 /* AppDelegate.swift */; };
 		BB6369291FBFED30005FF522 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6369281FBFED30005FF522 /* Document.swift */; };
 		BB63692C1FBFED30005FF522 /* Document.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB63692A1FBFED30005FF522 /* Document.xib */; };
@@ -21,6 +22,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BB585D3F1FC3BFAC0038882D /* pyplot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = pyplot.swift; path = SwiftPython.playground/Sources/pyplot.swift; sourceTree = SOURCE_ROOT; };
 		BB6369231FBFED30005FF522 /* EvalPython.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EvalPython.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB6369261FBFED30005FF522 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BB6369281FBFED30005FF522 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
@@ -75,6 +77,7 @@
 				BBDA481B1FBFF2B8005BA59C /* PythonSupport.swift */,
 				BBDA481E1FBFF3A2005BA59C /* Complex.swift */,
 				BBDA48201FBFF7B3005BA59C /* complex.py */,
+				BB585D3F1FC3BFAC0038882D /* pyplot.swift */,
 				BB63692A1FBFED30005FF522 /* Document.xib */,
 				BB63692D1FBFED30005FF522 /* Assets.xcassets */,
 				BB63692F1FBFED30005FF522 /* MainMenu.xib */,
@@ -164,6 +167,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BBDA481C1FBFF2B8005BA59C /* StackTrace.swift in Sources */,
+				BB585D401FC3BFAE0038882D /* pyplot.swift in Sources */,
 				BBDA48191FBFF0D5005BA59C /* SwiftEval.swift in Sources */,
 				BBDA481D1FBFF2B8005BA59C /* PythonSupport.swift in Sources */,
 				BB6369291FBFED30005FF522 /* Document.swift in Sources */,

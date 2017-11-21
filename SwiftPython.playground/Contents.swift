@@ -93,12 +93,12 @@ let d1 = PythonObject(any: ["a": 123, "b": 456]).asAny(of: [String: Double].self
 // "PythonAny" is SwiftyJSON-like omni-type useful for processing recursive data
 PythonAny(any: ["a": 1.0, "b": 2.0, "c": [1,2,3]])["c"]?[1].asInt
 
-// Processing of large arrays of primitive type is optimised
+// Processing large arrays of primitive types is optimised
 let start = Date()
 (cplx.echoArray(value: Array(0 ..< 1_000_000)).asAny(of: [Int].self))[1000]
 print(Date().timeIntervalSince(start))
 
 // Finally, Python's plot routines can be made available
-print("Mandelbrot window may be behind the playground/workspace")
+print("Mandelbrot window may appear behind the playground/workspace")
 imshow(mandelbrot(400,400,20), PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, 1, 4, PythonNone, PythonNone, PythonNone, PythonNone)
 show()
