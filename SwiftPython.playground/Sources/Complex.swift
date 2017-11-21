@@ -1,7 +1,7 @@
 
 // Generated from module complex by bridgegen.py
 
-public let complexModule = PythonModule(named: "complex")
+public let complexModule = PythonModule(loading: "complex")
 
 public let ComplexClass = PythonClass(module: complexModule, named: "Complex", type: Complex.self)
 
@@ -47,18 +47,18 @@ public class Complex: PythonObject {
         }
     }
 
-    public init(realpart: Any, imagpart: Any) {
-        super.init(any: ComplexClass.call(args: [realpart, imagpart]))
+    public init(realpart: Any = 0, imagpart: Any = 0, _ _kw: [String: Any]? = nil) {
+        super.init(any: ComplexClass.call(args: [realpart, imagpart], kw: _kw))
     }
 
-    public convenience init(_ realpart: Any, _ imagpart: Any) {
-        self.init(realpart: realpart, imagpart: imagpart)
+    public convenience init(_ _realpart: Any = 0, _ _imagpart: Any = 0) {
+        self.init(realpart: _realpart, imagpart: _imagpart)
     }
 
     private static let addMethod = ComplexClass.function(named: "add")
 
-    public func add(c: Any) -> Void {
-        return Complex.addMethod.call(args: [self, c]).asVoid
+    public func add(c: Any, _ _kw: [String: Any]? = nil) -> Void {
+        return Complex.addMethod.call(args: [self, c], kw: _kw).asVoid
     }
 
     public func add(_ _c: Any) -> Void {
@@ -67,8 +67,8 @@ public class Complex: PythonObject {
 
     private static let callmeMethod = ComplexClass.function(named: "callme")
 
-    public func callme(closure: Any, str: Any) -> [String: Double] {
-        return Complex.callmeMethod.call(args: [self, closure, str]).asDictionary(of: Double.self)
+    public func callme(closure: Any, str: Any, _ _kw: [String: Any]? = nil) -> [String: Double] {
+        return Complex.callmeMethod.call(args: [self, closure, str], kw: _kw).asDictionary(of: Double.self)
     }
 
     public func callme(_ _closure: Any, _ _str: Any) -> [String: Double] {
@@ -77,8 +77,8 @@ public class Complex: PythonObject {
 
     private static let echoArrayMethod = ComplexClass.function(named: "echoArray")
 
-    public func echoArray(value: Any) -> PythonList<Int> {
-        return Complex.echoArrayMethod.call(args: [self, value]).asPythonObject(of: PythonList<Int>.self)
+    public func echoArray(value: Any, _ _kw: [String: Any]? = nil) -> PythonList<Int> {
+        return Complex.echoArrayMethod.call(args: [self, value], kw: _kw).asPythonObject(of: PythonList<Int>.self)
     }
 
     public func echoArray(_ _value: Any) -> PythonList<Int> {
@@ -87,82 +87,43 @@ public class Complex: PythonObject {
 
     private static let toArrayMethod = ComplexClass.function(named: "toArray")
 
-    public func toArray() -> [Double] {
-        return Complex.toArrayMethod.call(args: [self]).asArray(of: Double.self)
+    public func toArray(_ _kw: [String: Any]? = nil) -> [Double] {
+        return Complex.toArrayMethod.call(args: [self], kw: _kw).asArray(of: Double.self)
     }
 
     private static let toDictionaryMethod = ComplexClass.function(named: "toDictionary")
 
-    public func toDictionary() -> [String: Double] {
-        return Complex.toDictionaryMethod.call(args: [self]).asDictionary(of: Double.self)
+    public func toDictionary(_ _kw: [String: Any]? = nil) -> [String: Double] {
+        return Complex.toDictionaryMethod.call(args: [self], kw: _kw).asDictionary(of: Double.self)
     }
 
     private static let toStringMethod = ComplexClass.function(named: "toString")
 
-    public func toString(extra: Any) -> String {
-        return Complex.toStringMethod.call(args: [self, extra]).asString
+    public func toString(extra: Any = "STRING", _ _kw: [String: Any]? = nil) -> String {
+        return Complex.toStringMethod.call(args: [self, extra], kw: _kw).asString
     }
 
-    public func toString(_ _extra: Any) -> String {
+    public func toString(_ _extra: Any = "STRING") -> String {
         return toString(extra: _extra)
-    }
-}
-
-public let SwiftClosureClass = PythonClass(module: complexModule, named: "SwiftClosure", type: SwiftClosure.self)
-
-public class SwiftClosure: PythonObject {
-
-    public required init(any: Any) {
-        super.init(any: any)
-    }
-
-    private static let __del__Method = SwiftClosureClass.function(named: "__del__")
-
-    public func __del__() -> PythonObject {
-        return SwiftClosure.__del__Method.call(args: [self])
-    }
-
-    public init(closure: Any) {
-        super.init(any: SwiftClosureClass.call(args: [closure]))
-    }
-
-    public convenience init(_ closure: Any) {
-        self.init(closure: closure)
-    }
-
-    private static let callMethod = SwiftClosureClass.function(named: "call")
-
-    public func call(args: Any) -> PythonObject {
-        return SwiftClosure.callMethod.call(args: [self, args])
-    }
-
-    public func call(_ _args: Any) -> PythonObject {
-        return call(args: _args)
-    }
-
-    private static let deallocateMethod = SwiftClosureClass.function(named: "deallocate")
-
-    public func deallocate() -> Void {
-        return SwiftClosure.deallocateMethod.call(args: [self]).asVoid
     }
 }
 
 private let mandelbrotFunction = complexModule.function(named: "mandelbrot")
 
-public func mandelbrot(h: Any, w: Any, maxit: Any) -> PythonObject {
-    return mandelbrotFunction.call(args: [h, w, maxit])
+public func mandelbrot(h: Any, w: Any, maxit: Any = 20, _ _kw: [String: Any]? = nil) -> PythonObject {
+    return mandelbrotFunction.call(args: [h, w, maxit], kw: _kw)
 }
 
-public func mandelbrot(_ h: Any, _ w: Any, _ maxit: Any) -> PythonObject {
-    return mandelbrot(h: h, w: w, maxit: maxit)
+public func mandelbrot(_ _h: Any, _ _w: Any, _ _maxit: Any = 20) -> PythonObject {
+    return mandelbrot(h: _h, w: _w, maxit: _maxit)
 }
 
 private let newComplexFunction = complexModule.function(named: "newComplex")
 
-public func newComplex(real: Any, imag: Any) -> Complex {
-    return newComplexFunction.call(args: [real, imag]).asPythonObject(of: Complex.self)
+public func newComplex(real: Any, imag: Any, _ _kw: [String: Any]? = nil) -> Complex {
+    return newComplexFunction.call(args: [real, imag], kw: _kw).asPythonObject(of: Complex.self)
 }
 
-public func newComplex(_ real: Any, _ imag: Any) -> Complex {
-    return newComplex(real: real, imag: imag)
+public func newComplex(_ _real: Any, _ _imag: Any) -> Complex {
+    return newComplex(real: _real, imag: _imag)
 }
