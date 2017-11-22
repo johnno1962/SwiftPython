@@ -68,8 +68,8 @@ def sanitise(args):
     return ", ".join(map(lambda arg: reserved(arg), args))
 
 def genargs(args, defaults, prefix=""):
-    opt = ""
-    dflt = ""
+    opt = "?"
+    dflt = " = nil"
     defaults = tuple(map(lambda x: None, range(len(args)-len(defaults)))) + defaults if defaults else defaults
     return ", ".join(map(lambda i: ("" if prefix == "" else "_ ")+prefix+args[i]+": Any"+opt+ \
             (dflt if not (defaults and i < len(defaults) and defaults[i] != None) else

@@ -100,5 +100,5 @@ print(Date().timeIntervalSince(start))
 
 // Finally, Python's plot routines can be made available
 print("Mandelbrot window may appear behind the playground/workspace")
-imshow(mandelbrot(400,400,20), PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, PythonNone, 1, 4, PythonNone, PythonNone, PythonNone, PythonNone)
+imshow(mandelbrot(400,400))
 show()
