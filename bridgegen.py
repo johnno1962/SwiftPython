@@ -9,7 +9,7 @@
 # Should be used in conjunction with support code:
 # SwiftPython.playground/Sources/PythonSupport.swift
 #
-#  $Id: //depot/SwiftPython/bridgegen.py#41 $
+#  $Id: //depot/SwiftPython/bridgegen.py#44 $
 #
 
 import inspect
@@ -68,14 +68,15 @@ def sanitise(args):
     return ", ".join(map(lambda arg: reserved(arg), args))
 
 def genargs(args, defaults, prefix=""):
-    opt = ""
-    dflt = ""
+    opt = "?"
+    dflt = " = nil"
     defaults = tuple(map(lambda x: None, range(len(args)-len(defaults)))) + defaults if defaults else defaults
     return ", ".join(map(lambda i: ("" if prefix == "" else "_ ")+prefix+args[i]+": Any"+opt+ \
             (dflt if not (defaults and i < len(defaults) and defaults[i] != None) else
             ' = "'+defaults[i]+'"' if isinstance(defaults[i], basestring) else \
             (" = true" if defaults[i] else " = false") if isinstance(defaults[i], bool) else \
-            " = "+str(defaults[i]) if isinstance(defaults[i], (int, long, float)) else dflt), range(len(args))))
+            " = "+str(defaults[i]) if isinstance(defaults[i], (int, long, float)) else dflt), range(len(args)))) + \
+            (", " if len(args) else "")+("_ " if prefix or len(args) == 0 else "")+"_kw: [String: Any]? = nil"
 
 def genfunction(module, name, func):
     args, varargs, keywords, defaults = inspect.getargspec(func)
@@ -84,17 +85,17 @@ def genfunction(module, name, func):
     print("""
 private let %sFunction = %sModule.function(named: "%s")
 
-public func %s(%s%s_ _kw: [String: Any]? = nil) -> %s {
+public func %s(%s) -> %s {
     return %sFunction.call(args: [%s], kw: _kw)%s
 }""" %
           (name, module, name,
-           name, genargs(args, defaults),
-           ", " if len(args) > 0 else "", swiftType, name, sanitise(args), asCall))
+           name, genargs(args, defaults), swiftType,
+           name, sanitise(args), asCall))
 
     if len(args) > 0:
         print("""
 public func %s(%s) -> %s {
-    return %s(%s)
+    return %s(%s, _kw: _kw)
 }""" % (name, genargs(args, defaults, "_"), swiftType,
         name, ", ".join(map(lambda arg: arg+": "+reserved("_"+arg), args))))
 
@@ -143,16 +144,15 @@ def geninit(classname, name, func):
     args = args[1:]
 
     print("""
-    public init(%s%s_ _kw: [String: Any]? = nil) {
+    public init(%s) {
         super.init(any: %sClass.call(args: [%s], kw: _kw))
     }""" %
-          (genargs(args, defaults),
-           ", " if len(args) > 0 else "", classname, sanitise(args)))
+          (genargs(args, defaults), classname, sanitise(args)))
 
     if len(args) > 0:
         print("""
     public convenience init(%s) {
-        self.init(%s)
+        self.init(%s, _kw: _kw)
     }""" %
           (genargs(args, defaults, "_"),
            ", ".join(map(lambda arg: arg+": "+reserved("_"+arg), args))))
@@ -165,18 +165,17 @@ def genmethod(classname, name, func):
     print("""
     private static let %sMethod = %sClass.function(named: "%s")
 
-    public func %s(%s%s_ _kw: [String: Any]? = nil) -> %s {
+    public func %s(%s) -> %s {
         return %s.%sMethod.call(args: [%s], kw: _kw)%s
     }""" %
           (name, classname, name,
-           name, genargs(args[1:], defaults),
-           ", " if len(args) > 1 else "",
-           swiftType, classname, name, sanitise(["self"]+args[1:]), asCall))
+           name, genargs(args[1:], defaults), swiftType,
+           classname, name, sanitise(["self"]+args[1:]), asCall))
 
     if len(args) > 1:
         print("""
     public func %s(%s) -> %s {
-        return %s(%s)
+        return %s(%s, _kw: _kw)
     }""" % (name, genargs(args[1:], defaults, "_"), swiftType,
            name, ", ".join(map(lambda arg: arg+": "+reserved("_"+arg), args[1:]))))
 
