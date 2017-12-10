@@ -7,20 +7,34 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB34E95D1FDD6D6700D5286C /* SwiftPython.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB34E9591FDD6BE800D5286C /* SwiftPython.framework */; };
+		BB34E95E1FDD6D6700D5286C /* SwiftPython.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BB34E9591FDD6BE800D5286C /* SwiftPython.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BB6369271FBFED30005FF522 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6369261FBFED30005FF522 /* AppDelegate.swift */; };
 		BB6369291FBFED30005FF522 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6369281FBFED30005FF522 /* Document.swift */; };
 		BB63692C1FBFED30005FF522 /* Document.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB63692A1FBFED30005FF522 /* Document.xib */; };
 		BB63692E1FBFED30005FF522 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB63692D1FBFED30005FF522 /* Assets.xcassets */; };
 		BB6369311FBFED30005FF522 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB63692F1FBFED30005FF522 /* MainMenu.xib */; };
 		BBDA48191FBFF0D5005BA59C /* SwiftEval.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDA48181FBFF0D5005BA59C /* SwiftEval.swift */; };
-		BBDA481C1FBFF2B8005BA59C /* StackTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDA481A1FBFF2B8005BA59C /* StackTrace.swift */; };
-		BBDA481D1FBFF2B8005BA59C /* PythonSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDA481B1FBFF2B8005BA59C /* PythonSupport.swift */; };
-		BBDA481F1FBFF3A2005BA59C /* Complex.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDA481E1FBFF3A2005BA59C /* Complex.swift */; };
 		BBDA48211FBFF7B3005BA59C /* complex.py in Resources */ = {isa = PBXBuildFile; fileRef = BBDA48201FBFF7B3005BA59C /* complex.py */; };
 		BBDA48231FC001B8005BA59C /* App.icns in Resources */ = {isa = PBXBuildFile; fileRef = BBDA48221FC001B8005BA59C /* App.icns */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		BB34E95F1FDD6D6700D5286C /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				BB34E95E1FDD6D6700D5286C /* SwiftPython.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		BB34E9591FDD6BE800D5286C /* SwiftPython.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftPython.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB6369231FBFED30005FF522 /* EvalPython.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EvalPython.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB6369261FBFED30005FF522 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BB6369281FBFED30005FF522 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
@@ -30,9 +44,6 @@
 		BB6369321FBFED30005FF522 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BB6369331FBFED30005FF522 /* EvalPython.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EvalPython.entitlements; sourceTree = "<group>"; };
 		BBDA48181FBFF0D5005BA59C /* SwiftEval.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftEval.swift; sourceTree = "<group>"; };
-		BBDA481A1FBFF2B8005BA59C /* StackTrace.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = StackTrace.swift; path = SwiftPython.playground/Sources/StackTrace.swift; sourceTree = SOURCE_ROOT; };
-		BBDA481B1FBFF2B8005BA59C /* PythonSupport.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PythonSupport.swift; path = SwiftPython.playground/Sources/PythonSupport.swift; sourceTree = SOURCE_ROOT; };
-		BBDA481E1FBFF3A2005BA59C /* Complex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Complex.swift; path = SwiftPython.playground/Sources/Complex.swift; sourceTree = SOURCE_ROOT; };
 		BBDA48201FBFF7B3005BA59C /* complex.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = complex.py; path = SwiftPython.playground/Resources/complex.py; sourceTree = SOURCE_ROOT; };
 		BBDA48221FC001B8005BA59C /* App.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = App.icns; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -42,17 +53,27 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB34E95D1FDD6D6700D5286C /* SwiftPython.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BB34E9571FDD6BE800D5286C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BB34E9591FDD6BE800D5286C /* SwiftPython.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		BB63691A1FBFED30005FF522 = {
 			isa = PBXGroup;
 			children = (
 				BB6369251FBFED30005FF522 /* EvalPython */,
 				BB6369241FBFED30005FF522 /* Products */,
+				BB34E9571FDD6BE800D5286C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -71,9 +92,6 @@
 				BB6369261FBFED30005FF522 /* AppDelegate.swift */,
 				BB6369281FBFED30005FF522 /* Document.swift */,
 				BBDA48181FBFF0D5005BA59C /* SwiftEval.swift */,
-				BBDA481A1FBFF2B8005BA59C /* StackTrace.swift */,
-				BBDA481B1FBFF2B8005BA59C /* PythonSupport.swift */,
-				BBDA481E1FBFF3A2005BA59C /* Complex.swift */,
 				BBDA48201FBFF7B3005BA59C /* complex.py */,
 				BB63692A1FBFED30005FF522 /* Document.xib */,
 				BB63692D1FBFED30005FF522 /* Assets.xcassets */,
@@ -94,6 +112,7 @@
 				BB63691F1FBFED30005FF522 /* Sources */,
 				BB6369201FBFED30005FF522 /* Frameworks */,
 				BB6369211FBFED30005FF522 /* Resources */,
+				BB34E95F1FDD6D6700D5286C /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -163,11 +182,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BBDA481C1FBFF2B8005BA59C /* StackTrace.swift in Sources */,
 				BBDA48191FBFF0D5005BA59C /* SwiftEval.swift in Sources */,
-				BBDA481D1FBFF2B8005BA59C /* PythonSupport.swift in Sources */,
 				BB6369291FBFED30005FF522 /* Document.swift in Sources */,
-				BBDA481F1FBFF3A2005BA59C /* Complex.swift in Sources */,
 				BB6369271FBFED30005FF522 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

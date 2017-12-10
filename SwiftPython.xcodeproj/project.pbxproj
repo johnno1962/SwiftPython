@@ -11,6 +11,8 @@
 		BB0E36B11FBD107F00903386 /* SwiftPython.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB0E36A71FBD107F00903386 /* SwiftPython.framework */; };
 		BB0E36B61FBD107F00903386 /* SwiftPythonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0E36B51FBD107F00903386 /* SwiftPythonTests.swift */; };
 		BB0E36B81FBD107F00903386 /* SwiftPython.h in Headers */ = {isa = PBXBuildFile; fileRef = BB0E36AA1FBD107F00903386 /* SwiftPython.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BB6DDC861FDBF153008C6A9D /* Complex.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6DDC851FDBF150008C6A9D /* Complex.swift */; };
+		BB6DDC881FDBF265008C6A9D /* complex.py in Resources */ = {isa = PBXBuildFile; fileRef = BB6DDC871FDBF265008C6A9D /* complex.py */; };
 		BB7BCC001FBD11080084F459 /* PythonSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB7BCBFF1FBD11080084F459 /* PythonSupport.swift */; };
 /* End PBXBuildFile section */
 
@@ -32,6 +34,8 @@
 		BB0E36B01FBD107F00903386 /* SwiftPythonTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftPythonTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB0E36B51FBD107F00903386 /* SwiftPythonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftPythonTests.swift; sourceTree = "<group>"; };
 		BB0E36B71FBD107F00903386 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BB6DDC851FDBF150008C6A9D /* Complex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Complex.swift; path = SwiftPython.playground/Sources/Complex.swift; sourceTree = "<group>"; };
+		BB6DDC871FDBF265008C6A9D /* complex.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = complex.py; path = SwiftPython.playground/Resources/complex.py; sourceTree = "<group>"; };
 		BB7BCBFF1FBD11080084F459 /* PythonSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PythonSupport.swift; path = SwiftPython.playground/Sources/PythonSupport.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -57,6 +61,8 @@
 		BB0E369D1FBD107F00903386 = {
 			isa = PBXGroup;
 			children = (
+				BB6DDC871FDBF265008C6A9D /* complex.py */,
+				BB6DDC851FDBF150008C6A9D /* Complex.swift */,
 				BB0850311FBD57BC002FBE0F /* StackTrace.swift */,
 				BB7BCBFF1FBD11080084F459 /* PythonSupport.swift */,
 				BB0E36A91FBD107F00903386 /* SwiftPython */,
@@ -185,6 +191,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB6DDC881FDBF265008C6A9D /* complex.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -203,6 +210,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BB0850321FBD57BC002FBE0F /* StackTrace.swift in Sources */,
+				BB6DDC861FDBF153008C6A9D /* Complex.swift in Sources */,
 				BB7BCC001FBD11080084F459 /* PythonSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -275,12 +283,12 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -329,7 +337,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";

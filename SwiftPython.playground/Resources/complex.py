@@ -20,6 +20,9 @@ class Complex:
         self.r += c.r
         self.i += c.i
 
+    def __add__(self, arg):
+        return Complex(self.r + arg.r, self.i + arg.i)
+
     def toString(self, extra = "STRING"):
         """ Swift returns String """
         return "(%f %f %s)" % (self.r, self.i, str(extra))
@@ -32,8 +35,14 @@ class Complex:
         """ Swift returns [String: Double] """
         return {'real': self.r, 'imag': self.i}
 
+    def __str__(self):
+        return str(self.toDictionary())
+
+    def __eq__(self, c):
+        return self.r == c.r and self.i == c.i
+
     def echoArray(self, value):
-        """ Swift returns PythonList<Int> """
+        """ Swift returns PythonDict<PythonList<Int>> """
         return value
 
     def callme(self, closure, str):

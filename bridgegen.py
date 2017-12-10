@@ -9,7 +9,7 @@
 # Should be used in conjunction with support code:
 # SwiftPython.playground/Sources/PythonSupport.swift
 #
-#  $Id: //depot/SwiftPython/bridgegen.py#44 $
+#  $Id: //depot/SwiftPython/bridgegen.py#49 $
 #
 
 import inspect
@@ -45,16 +45,16 @@ def asCall(swiftType):
         array = re.search(r"\[(\S+)\]", swiftType)
         if array:
             return ".asArray(of: %s.self)" % array.group(1)
-        elif re.search(r"^(String|Double|Int|Data|PythonAny|Void)$", swiftType):
-            return ".as%s" % swiftType
+        elif swiftType != "Void":
+            return ".asAny(of: %s.self)" % swiftType
         else:
-            return ".asPythonObject(of: %s.self)" % swiftType
+            return ".asVoid"
 
 
 def asTypes(obj):
     if obj.__doc__ == None:
         return ("PythonObject", "")
-    returns = re.search(r"Swift returns (\[[^\]]+\]|\w+(?:<[^>]+>)?)", obj.__doc__)
+    returns = re.search(r"Swift returns (\[[^\]]+\]|\w+(?:<[^>]+>+)?)", obj.__doc__)
     if returns == None:
         return ("PythonObject", "")
 
@@ -76,7 +76,7 @@ def genargs(args, defaults, prefix=""):
             ' = "'+defaults[i]+'"' if isinstance(defaults[i], basestring) else \
             (" = true" if defaults[i] else " = false") if isinstance(defaults[i], bool) else \
             " = "+str(defaults[i]) if isinstance(defaults[i], (int, long, float)) else dflt), range(len(args)))) + \
-            (", " if len(args) else "")+("_ " if prefix or len(args) == 0 else "")+"_kw: [String: Any]? = nil"
+            (", " if len(args) else "")+("_ " if len(args) == 0 else "")+"kw: [String: Any]? = nil"
 
 def genfunction(module, name, func):
     args, varargs, keywords, defaults = inspect.getargspec(func)
@@ -86,7 +86,7 @@ def genfunction(module, name, func):
 private let %sFunction = %sModule.function(named: "%s")
 
 public func %s(%s) -> %s {
-    return %sFunction.call(args: [%s], kw: _kw)%s
+    return %sFunction.call(args: [%s], kw: kw)%s
 }""" %
           (name, module, name,
            name, genargs(args, defaults), swiftType,
@@ -95,14 +95,14 @@ public func %s(%s) -> %s {
     if len(args) > 0:
         print("""
 public func %s(%s) -> %s {
-    return %s(%s, _kw: _kw)
+    return %s(%s, kw: kw)
 }""" % (name, genargs(args, defaults, "_"), swiftType,
         name, ", ".join(map(lambda arg: arg+": "+reserved("_"+arg), args))))
 
 
 def genclass(module, classname, clazz):
     print("""
-public let %sClass = PythonClass(module: %sModule, named: "%s", type: %s.self)
+public let %sClass = PythonClass(from: %sModule, named: "%s", type: %s.self)
 
 public class %s: PythonObject {
 
@@ -145,14 +145,14 @@ def geninit(classname, name, func):
 
     print("""
     public init(%s) {
-        super.init(any: %sClass.call(args: [%s], kw: _kw))
+        super.init(any: %sClass.call(args: [%s], kw: kw))
     }""" %
           (genargs(args, defaults), classname, sanitise(args)))
 
     if len(args) > 0:
         print("""
     public convenience init(%s) {
-        self.init(%s, _kw: _kw)
+        self.init(%s, kw: kw)
     }""" %
           (genargs(args, defaults, "_"),
            ", ".join(map(lambda arg: arg+": "+reserved("_"+arg), args))))
@@ -166,7 +166,7 @@ def genmethod(classname, name, func):
     private static let %sMethod = %sClass.function(named: "%s")
 
     public func %s(%s) -> %s {
-        return %s.%sMethod.call(args: [%s], kw: _kw)%s
+        return %s.%sMethod.call(args: [%s], kw: kw)%s
     }""" %
           (name, classname, name,
            name, genargs(args[1:], defaults), swiftType,
@@ -175,7 +175,7 @@ def genmethod(classname, name, func):
     if len(args) > 1:
         print("""
     public func %s(%s) -> %s {
-        return %s(%s, _kw: _kw)
+        return %s(%s, kw: kw)
     }""" % (name, genargs(args[1:], defaults, "_"), swiftType,
            name, ", ".join(map(lambda arg: arg+": "+reserved("_"+arg), args[1:]))))
 

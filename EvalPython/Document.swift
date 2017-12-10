@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import SwiftPython
 
 class Document: NSDocument {
 
