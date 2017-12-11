@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB1F4C8F1FDE6584002161B6 /* Complex.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1F4C8E1FDE6582002161B6 /* Complex.swift */; };
 		BB34E95D1FDD6D6700D5286C /* SwiftPython.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB34E9591FDD6BE800D5286C /* SwiftPython.framework */; };
 		BB34E95E1FDD6D6700D5286C /* SwiftPython.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BB34E9591FDD6BE800D5286C /* SwiftPython.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BB6369271FBFED30005FF522 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6369261FBFED30005FF522 /* AppDelegate.swift */; };
@@ -34,6 +35,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BB1F4C8E1FDE6582002161B6 /* Complex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Complex.swift; path = SwiftPython.playground/Sources/Complex.swift; sourceTree = SOURCE_ROOT; };
 		BB34E9591FDD6BE800D5286C /* SwiftPython.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftPython.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB6369231FBFED30005FF522 /* EvalPython.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EvalPython.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB6369261FBFED30005FF522 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -92,6 +94,7 @@
 				BB6369261FBFED30005FF522 /* AppDelegate.swift */,
 				BB6369281FBFED30005FF522 /* Document.swift */,
 				BBDA48181FBFF0D5005BA59C /* SwiftEval.swift */,
+				BB1F4C8E1FDE6582002161B6 /* Complex.swift */,
 				BBDA48201FBFF7B3005BA59C /* complex.py */,
 				BB63692A1FBFED30005FF522 /* Document.xib */,
 				BB63692D1FBFED30005FF522 /* Assets.xcassets */,
@@ -182,6 +185,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB1F4C8F1FDE6584002161B6 /* Complex.swift in Sources */,
 				BBDA48191FBFF0D5005BA59C /* SwiftEval.swift in Sources */,
 				BB6369291FBFED30005FF522 /* Document.swift in Sources */,
 				BB6369271FBFED30005FF522 /* AppDelegate.swift in Sources */,
@@ -239,7 +243,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -296,7 +300,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -320,9 +324,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 9V5A8WE85E;
 				INFOPLIST_FILE = EvalPython/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.johnholdsworth.EvalPython;
@@ -335,9 +337,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 9V5A8WE85E;
 				INFOPLIST_FILE = EvalPython/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.johnholdsworth.EvalPython;

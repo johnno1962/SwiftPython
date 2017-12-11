@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name        = "SwiftPython"
-    s.version     = "1.0"
+    s.version     = "1.1"
     s.summary     = "Swift Integration with Python"
     s.homepage    = "https://github.com/johnno1962/SwiftPython"
     s.social_media_url = "https://twitter.com/Injection4Xcode"

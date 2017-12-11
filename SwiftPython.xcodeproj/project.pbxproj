@@ -11,8 +11,8 @@
 		BB0E36B11FBD107F00903386 /* SwiftPython.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB0E36A71FBD107F00903386 /* SwiftPython.framework */; };
 		BB0E36B61FBD107F00903386 /* SwiftPythonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0E36B51FBD107F00903386 /* SwiftPythonTests.swift */; };
 		BB0E36B81FBD107F00903386 /* SwiftPython.h in Headers */ = {isa = PBXBuildFile; fileRef = BB0E36AA1FBD107F00903386 /* SwiftPython.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		BB6DDC861FDBF153008C6A9D /* Complex.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6DDC851FDBF150008C6A9D /* Complex.swift */; };
-		BB6DDC881FDBF265008C6A9D /* complex.py in Resources */ = {isa = PBXBuildFile; fileRef = BB6DDC871FDBF265008C6A9D /* complex.py */; };
+		BB1F392E1FDE699500F1A0F5 /* complex.py in Resources */ = {isa = PBXBuildFile; fileRef = BB6DDC871FDBF265008C6A9D /* complex.py */; };
+		BB1F4C8D1FDE6565002161B6 /* Complex.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1F4C8C1FDE6565002161B6 /* Complex.swift */; };
 		BB7BCC001FBD11080084F459 /* PythonSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB7BCBFF1FBD11080084F459 /* PythonSupport.swift */; };
 /* End PBXBuildFile section */
 
@@ -34,7 +34,7 @@
 		BB0E36B01FBD107F00903386 /* SwiftPythonTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftPythonTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB0E36B51FBD107F00903386 /* SwiftPythonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftPythonTests.swift; sourceTree = "<group>"; };
 		BB0E36B71FBD107F00903386 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		BB6DDC851FDBF150008C6A9D /* Complex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Complex.swift; path = SwiftPython.playground/Sources/Complex.swift; sourceTree = "<group>"; };
+		BB1F4C8C1FDE6565002161B6 /* Complex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Complex.swift; path = SwiftPython.playground/Sources/Complex.swift; sourceTree = SOURCE_ROOT; };
 		BB6DDC871FDBF265008C6A9D /* complex.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = complex.py; path = SwiftPython.playground/Resources/complex.py; sourceTree = "<group>"; };
 		BB7BCBFF1FBD11080084F459 /* PythonSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PythonSupport.swift; path = SwiftPython.playground/Sources/PythonSupport.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -62,7 +62,6 @@
 			isa = PBXGroup;
 			children = (
 				BB6DDC871FDBF265008C6A9D /* complex.py */,
-				BB6DDC851FDBF150008C6A9D /* Complex.swift */,
 				BB0850311FBD57BC002FBE0F /* StackTrace.swift */,
 				BB7BCBFF1FBD11080084F459 /* PythonSupport.swift */,
 				BB0E36A91FBD107F00903386 /* SwiftPython */,
@@ -93,6 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				BB0E36B51FBD107F00903386 /* SwiftPythonTests.swift */,
+				BB1F4C8C1FDE6565002161B6 /* Complex.swift */,
 				BB0E36B71FBD107F00903386 /* Info.plist */,
 			);
 			path = SwiftPythonTests;
@@ -191,7 +191,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BB6DDC881FDBF265008C6A9D /* complex.py in Resources */,
+				BB1F392E1FDE699500F1A0F5 /* complex.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,7 +210,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				BB0850321FBD57BC002FBE0F /* StackTrace.swift in Sources */,
-				BB6DDC861FDBF153008C6A9D /* Complex.swift in Sources */,
 				BB7BCC001FBD11080084F459 /* PythonSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -219,6 +218,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB1F4C8D1FDE6565002161B6 /* Complex.swift in Sources */,
 				BB0E36B61FBD107F00903386 /* SwiftPythonTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -263,7 +263,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -323,7 +323,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -349,11 +349,8 @@
 		BB0E36BC1FBD107F00903386 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 9V5A8WE85E;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -371,11 +368,8 @@
 		BB0E36BD1FBD107F00903386 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 9V5A8WE85E;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -394,9 +388,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 9V5A8WE85E;
 				INFOPLIST_FILE = SwiftPythonTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.johnholdsworth.SwiftPythonTests;
@@ -409,9 +401,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 9V5A8WE85E;
 				INFOPLIST_FILE = SwiftPythonTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.johnholdsworth.SwiftPythonTests;

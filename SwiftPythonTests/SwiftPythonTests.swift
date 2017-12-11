@@ -7,7 +7,7 @@
 //
 
 import XCTest
-@testable import SwiftPython
+@testable @_exported import SwiftPython
 
 class SwiftPythonTests: XCTestCase {
     
@@ -38,6 +38,7 @@ class SwiftPythonTests: XCTestCase {
         test("123")
         test("123".data(using: .utf8)!)
         test(true)
+        test(false)
         test(Complex(1.0, 1.0))
 
         var c = Complex(1,1)
