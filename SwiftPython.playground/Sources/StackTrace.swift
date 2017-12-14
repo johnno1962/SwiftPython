@@ -15,7 +15,7 @@ public func backtrace_symbols(_ stack: UnsafePointer<UnsafeMutableRawPointer?>!,
 
 extension String {
     fileprivate subscript(range: NSRange) -> String? {
-        return range.location != NSNotFound ? String(self[Range(range, in: self)!]) : nil
+        return Range(range, in: self).flatMap { String(self[$0]) }
     }
 }
 
@@ -42,6 +42,14 @@ public func dumpStrackTrace() -> String {
 
     return stackTrace
 }
+
+#if !swift(>=4.0)
+extension NSTextCheckingResult {
+    fileprivate func range(at group: Int) -> NSRange {
+        return rangeAt(group)
+    }
+}
+#endif
 
 @_silgen_name ("setjmp")
 public func setjump(_: UnsafeMutablePointer<UInt8>!) -> Int32

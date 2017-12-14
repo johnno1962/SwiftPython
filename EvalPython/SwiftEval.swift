@@ -5,35 +5,36 @@
 //  Created by John Holdsworth on 02/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
-//  $Id: //depot/ResidentEval/InjectionBundle/SwiftEval.swift#35 $
+//  $Id: //depot/ResidentEval/InjectionBundle/SwiftEval.swift#93 $
 //
 //  Basic implementation of a Swift "eval()" including the
 //  mechanics of recompiling a class and loading the new
 //  version used in the associated injection version.
+//  Used as the basis of a new version of Injection.
 //
 
-#if arch(x86_64) // simulator/macOS only
+#if arch(x86_64) || arch(i386) // simulator/macOS only
 import Foundation
 
 private func debug(_ str: String) {
 //    print(str)
 }
 
-/// Error handler
-public var evalError = {
-    (_ message: String) -> [AnyClass]? in
-    print("*** \(message) ***")
-    _ = SwiftEval.instance.signer?("ERROR \(message)")
-    return nil
+@objc protocol SwiftEvalImpl {
+    @objc optional func evalImpl(_ptr: UnsafeMutableRawPointer)
 }
 
 extension NSObject {
 
     private static var lastEvalByClass = [String: String]()
 
+    @objc public func evalSwift(_ expression: String) {
+        eval("{\n\(expression)\n}", (() -> ())?.self)?()
+    }
+
     /// eval() for String value
     public func eval(_ expression: String) -> String {
-        return eval("\"" + expression + "\"", String.self)
+        return eval("\"\(expression)\"", String.self)
     }
 
     /// eval() for value of any type
@@ -44,31 +45,63 @@ extension NSObject {
 
             extension \(className) {
 
-                @objc dynamic override func evalImpl(_ptr: UnsafeMutableRawPointer) {
-                    let _ptr = _ptr.assumingMemoryBound(to: \(type).self)
+                @objc func evalImpl(_ptr: UnsafeMutableRawPointer) {
+                    func xprint<T>(_ str: T) {
+                        if let xprobe = NSClassFromString("Xprobe") {
+                            #if swift(>=4.0)
+                            _ = (xprobe as AnyObject).perform(Selector(("xlog:")), with: "\\(str)")
+                            #elseif swift(>=3.0)
+                            Thread.detachNewThreadSelector(Selector(("xlog:")), toTarget:xprobe, with:"\\(str)" as NSString)
+                            #else
+                            NSThread.detachNewThreadSelector(Selector("xlog:"), toTarget:xprobe, withObject:"\\(str)" as NSString)
+                            #endif
+                        }
+                    }
+
+                    #if swift(>=3.0)
+                    struct XprobeOutputStream: TextOutputStream {
+                        var out = ""
+                        mutating func write(_ string: String) {
+                            out += string
+                        }
+                    }
+
+                    func xdump<T>(_ arg: T) {
+                        var stream = XprobeOutputStream()
+                        dump(arg, to: &stream)
+                        xprint(stream.out)
+                    }
+                    #endif
+
+                    let _ptr = _ptr.assumingMemoryBound(to: (\(type)).self)
                     _ptr.pointee = \(expression)
                 }
-
             }
 
             """
 
         // update evalImpl to implement expression
 
-        if NSObject.lastEvalByClass[className] != expression,
-            let newClass = SwiftEval.instance.rebuildClass(oldClass: oldClass, classNameOrFile: className, extra: extra)?.first {
-            if NSStringFromClass(newClass) != NSStringFromClass(oldClass) {
-                NSLog("Class names different. Have the right class been loaded?")
+        if NSObject.lastEvalByClass[className] != expression {
+            do {
+                let tmpfile = try SwiftEval.instance.rebuildClass(oldClass: oldClass, classNameOrFile: className, extra: extra)
+                if let newClass = try SwiftEval.instance.loadAndInject(tmpfile: tmpfile, oldClass: oldClass).first {
+                    if NSStringFromClass(newClass) != NSStringFromClass(oldClass) {
+                        NSLog("Class names different. Have the right class been loaded?")
+                    }
+
+                    // swizzle new version of evalImpl onto class
+
+                    let selector = #selector(SwiftEvalImpl.evalImpl(_ptr:))
+                    if let newMethod = class_getInstanceMethod(newClass, selector) {
+                        class_replaceMethod(oldClass, selector,
+                                            method_getImplementation(newMethod),
+                                            method_getTypeEncoding(newMethod))
+                        NSObject.lastEvalByClass[className] = expression
+                    }
+                }
             }
-
-            // swizzle new version of evalImpl onto class
-
-            if let newMethod = class_getInstanceMethod(newClass, #selector(evalImpl(_ptr:))) {
-                class_replaceMethod(oldClass, #selector(evalImpl(_ptr:)),
-                                    method_getImplementation(newMethod),
-                                    method_getTypeEncoding(newMethod))
-
-                NSObject.lastEvalByClass[className] = expression
+            catch {
             }
         }
 
@@ -77,23 +110,19 @@ extension NSObject {
         let ptr = UnsafeMutablePointer<T>.allocate(capacity: 1)
         bzero(ptr, MemoryLayout<T>.size)
         if NSObject.lastEvalByClass[className] == expression {
-            evalImpl(_ptr: ptr)
+            unsafeBitCast(self, to: SwiftEvalImpl.self).evalImpl?(_ptr: ptr)
         }
         let out = ptr.pointee
         ptr.deallocate(capacity: 1)
         return out
     }
-
-    @objc dynamic func evalImpl(_ptr _: UnsafeMutableRawPointer) {
-        print("NSObject.evalImpl() called - no subclass implementation loaded")
-    }
 }
 
-extension String {
-    fileprivate subscript(range: NSRange) -> String? {
-        return range.location != NSNotFound ? String(self[Range(range, in: self)!]) : nil
+fileprivate extension String {
+    subscript(range: NSRange) -> String? {
+        return Range(range, in: self).flatMap { String(self[$0]) }
     }
-    func escaping(_ chars: String, _ template: String = "\\$0") -> String {
+    func escaping(_ chars: String, with template: String = "\\$0") -> String {
         return self.replacingOccurrences(of: "[\(chars)]",
             with: template.replacingOccurrences(of: "\\", with: "\\\\"), options: [.regularExpression])
     }
@@ -110,16 +139,47 @@ public class SwiftEval: NSObject {
 
     @objc public var signer: ((_: String) -> Bool)?
 
-    var injectionNumber = 0
-    var compileByClass = [String: (String, String)]()
+    // client specific info
+    @objc public var frameworks = Bundle.main.privateFrameworksPath
+                                    ?? Bundle.main.bundlePath + "/Frameworks"
+    @objc public var arch = "x86_64"
 
-    func rebuildClass(oldClass: AnyClass?, classNameOrFile: String, extra: String?) -> [AnyClass]? {
-        let sourceURL = URL(fileURLWithPath: classNameOrFile.contains("/") ? "/" + classNameOrFile : #file)
-        guard let derivedData = findDerivedData(url: sourceURL) else {
-            return evalError("Could not locate derived data. Is the project under you home directory?")
+    // Xcode related info
+    @objc public var xcodeDev = "/Applications/Xcode.app/Contents/Developer"
+
+    @objc public var projectFile: String?
+    @objc public var derivedLogs: String?
+
+    /// Error handler
+    @objc public var evalError = {
+        (_ message: String) -> Error in
+        print("*** \(message) ***")
+        return NSError(domain: "SwiftEval", code: -1, userInfo: [NSLocalizedDescriptionKey: message])
+    }
+
+    @objc public var injectionNumber = 0
+    static var compileByClass = [String: (String, String)]()
+
+    static var buildCacheFile = "/tmp/eval_builds.txt"
+    static var longTermCache = NSMutableDictionary(contentsOfFile: buildCacheFile) ?? NSMutableDictionary()
+
+    @objc public func rebuildClass(oldClass: AnyClass?, classNameOrFile: String, extra: String?) throws -> String {
+
+        // Largely obsolete section used find Xcode paths from source file being injected.
+
+        let sourceURL = URL(fileURLWithPath: classNameOrFile.hasPrefix("/") ? classNameOrFile : #file)
+        guard let derivedData = findDerivedData(url: URL(fileURLWithPath: NSHomeDirectory())) ??
+            findDerivedData(url: sourceURL) else {
+            throw evalError("Could not locate derived data. Is the project under you home directory?")
         }
-        guard let (projectFile, logsDir) = findProject(for: sourceURL, derivedData: derivedData) else {
-            return evalError("Could not locate containg project or it's logs.")
+        guard let (projectFile, logsDir) =
+            self.derivedLogs
+                .flatMap({ (URL(fileURLWithPath: self.projectFile!), URL(fileURLWithPath: $0)) }) ??
+            self.projectFile
+                .flatMap({ logsDir(project: URL(fileURLWithPath: $0), derivedData: derivedData) })
+                .flatMap({ (URL(fileURLWithPath: self.projectFile!), $0) }) ??
+            findProject(for: sourceURL, derivedData: derivedData) else {
+            throw evalError("Could not locate containg project or it's logs.")
         }
 
         // locate compile command for class
@@ -127,22 +187,21 @@ public class SwiftEval: NSObject {
         injectionNumber += 1
         let tmpfile = "/tmp/eval\(injectionNumber)"
 
-        guard var (compileCommand, sourceFile) = compileByClass[classNameOrFile] ??
-            findCompileCommand(logsDir: logsDir, classNameOrFile: classNameOrFile, tmpfile: tmpfile) else {
-            return evalError("""
+        guard var (compileCommand, sourceFile) = try SwiftEval.compileByClass[classNameOrFile] ??
+            findCompileCommand(logsDir: logsDir, classNameOrFile: classNameOrFile, tmpfile: tmpfile) ??
+            SwiftEval.longTermCache[classNameOrFile].flatMap({ ($0 as! String, classNameOrFile) }) else {
+            throw evalError("""
                 Could not locate compile command for \(classNameOrFile)
                 Try a clean build. There are also restrictions on characters allowed in paths.
                 """)
         }
 
-        compileByClass[classNameOrFile] = (compileCommand, sourceFile)
-
         // load and patch class source if there is an extension to add
 
         let filemgr = FileManager.default, backup = sourceFile + ".tmp"
         if extra != nil {
-            guard var classSource = (try? String(contentsOfFile: sourceFile)) else {
-                return evalError("Could not load source file \(sourceFile)")
+            guard var classSource = try? String(contentsOfFile: sourceFile) else {
+                throw evalError("Could not load source file \(sourceFile)")
             }
 
             let changesTag = "// extension added to implement eval"
@@ -172,59 +231,74 @@ public class SwiftEval: NSObject {
 
         let projectDir = projectFile.deletingLastPathComponent().path
 
-        print("Compiling \(sourceFile)")
+        _ = evalError("Compiling \(sourceFile)")
 
         guard shell(command: """
-            time (cd "\(projectDir.escaping("$"))" && \(compileCommand) -o \(tmpfile).o >\(tmpfile).log 2>&1)
-            """) else {
-            return evalError("Re-compilation failed (\(tmpfile).sh)\n\(try! String(contentsOfFile: "\(tmpfile).log"))")
+                time (cd "\(projectDir.escaping("$"))" && \(compileCommand) -o \(tmpfile).o >\(tmpfile).log 2>&1)
+                """) else {
+            SwiftEval.compileByClass.removeValue(forKey: classNameOrFile)
+            throw evalError("Re-compilation failed (\(tmpfile).sh)\n\(try! String(contentsOfFile: "\(tmpfile).log"))")
+        }
+
+        SwiftEval.compileByClass[classNameOrFile] = (compileCommand, sourceFile)
+        if SwiftEval.longTermCache[classNameOrFile] as? String != compileCommand && classNameOrFile.hasPrefix("/") {
+            SwiftEval.longTermCache[classNameOrFile] = compileCommand
+            SwiftEval.longTermCache.write(toFile: SwiftEval.buildCacheFile, atomically: false)
         }
 
         // link resulting object file to create dynamic library
 
-        let xcode = "/Applications/Xcode.app/Contents/Developer"
+        let toolchain = ((try! NSRegularExpression(pattern: "\\s*(\\S+?\\.xctoolchain)", options: []))
+            .firstMatch(in: compileCommand, options: [], range: NSMakeRange(0, compileCommand.utf16.count))?
+            .range(at: 1)).flatMap { compileCommand[$0] } ?? "\(xcodeDev)/Toolchains/XcodeDefault.xctoolchain"
 
-        #if os(iOS)
-        let osSpecific = "-isysroot \(xcode)/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk -mios-simulator-version-min=11.1 -L\(xcode)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -undefined dynamic_lookup"// -Xlinker -bundle_loader -Xlinker \"\(Bundle.main.executablePath!)\""
-        let frameworkPath = Bundle.main.bundlePath + "/Frameworks"
-        #else
-        let osSpecific = "-isysroot \(xcode)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mmacosx-version-min=10.12 -L\(xcode)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx -undefined dynamic_lookup"
-        let frameworkPath = Bundle.main.bundlePath + "/Contents/Frameworks"
-        #endif
+        let osSpecific: String
+        if compileCommand.contains("iPhoneSimulator.platform") {
+            osSpecific = "-isysroot \(xcodeDev)/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk -mios-simulator-version-min=9.0 -L\(toolchain)/usr/lib/swift/iphonesimulator -undefined dynamic_lookup"// -Xlinker -bundle_loader -Xlinker \"\(Bundle.main.executablePath!)\""
+        } else if compileCommand.contains("AppleTVSimulator.platform") {
+            osSpecific = "-isysroot \(xcodeDev)/Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator.sdk -mtvos-simulator-version-min=9.0 -L\(toolchain)/usr/lib/swift/appletvsimulator -undefined dynamic_lookup"// -Xlinker -bundle_loader -Xlinker \"\(Bundle.main.executablePath!)\""
+        } else {
+            osSpecific = "-isysroot \(xcodeDev)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mmacosx-version-min=10.11 -L\(toolchain)/usr/lib/swift/macosx -undefined dynamic_lookup"
+        }
 
         guard shell(command: """
-            \(xcode)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -arch x86_64 -bundle \(osSpecific) -dead_strip -Xlinker -objc_abi_version -Xlinker 2 -fobjc-arc \(tmpfile).o -L \(frameworkPath) -F \(frameworkPath) -rpath \(frameworkPath) -o \(tmpfile).dylib
+            \(xcodeDev)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -arch "\(arch)" -bundle \(osSpecific) -dead_strip -Xlinker -objc_abi_version -Xlinker 2 -fobjc-arc \(tmpfile).o -L "\(frameworks)" -F "\(frameworks)" -rpath "\(frameworks)" -o \(tmpfile).dylib
             """) else {
-            return evalError("Link failed")
+            throw evalError("Link failed, check /tmp/command.sh")
         }
 
         // codesign dylib
 
         if signer != nil {
             guard signer!("SIGN \(tmpfile).dylib") else {
-                return evalError("Codesign failed")
+                throw evalError("Codesign failed")
             }
         }
         else {
             #if os(iOS)
             // have to delegate code signing to macOS "signer" service
             guard (try? String(contentsOf: URL(string: "http://localhost:8899\(tmpfile).dylib")!)) != nil else {
-                return evalError("Codesign failed. Is 'signer' daemon running?")
+                throw evalError("Codesign failed. Is 'signer' daemon running?")
             }
             #else
             guard shell(command: """
-                export CODESIGN_ALLOCATE=\(xcode)/Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate; codesign --force -s '-' "\(tmpfile).dylib"
+                export CODESIGN_ALLOCATE=\(xcodeDev)/Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate; codesign --force -s '-' "\(tmpfile).dylib"
                 """) else {
-                return evalError("Codesign failed")
+                throw evalError("Codesign failed")
             }
             #endif
         }
 
-        // load patch .dylib into process with new version of class
+        return tmpfile
+    }
+
+    @objc func loadAndInject(tmpfile: String, oldClass: AnyClass? = nil) throws -> [AnyClass] {
+
+        // load patched .dylib into process with new version of class
 
         print("Loading \(tmpfile).dylib. (Ignore any duplicate class warning)")
         guard let dl = dlopen("\(tmpfile).dylib", RTLD_NOW) else {
-            return evalError("dlopen() error: \(String(cString: dlerror()))")
+            throw evalError("dlopen() error: \(String(cString: dlerror()))")
         }
 
         if oldClass != nil {
@@ -232,12 +306,12 @@ public class SwiftEval: NSObject {
 
             var info = Dl_info()
             guard dladdr(unsafeBitCast(oldClass, to: UnsafeRawPointer.self), &info) != 0 else {
-                return evalError("Could not locate class symbol")
+                throw evalError("Could not locate class symbol")
             }
 
             debug(String(cString: info.dli_sname))
             guard let newSymbol = dlsym(dl, info.dli_sname) else {
-                return evalError("Could not locate newly loaded class symbol")
+                throw evalError("Could not locate newly loaded class symbol")
             }
 
             return [unsafeBitCast(newSymbol, to: AnyClass.self)]
@@ -245,28 +319,31 @@ public class SwiftEval: NSObject {
         else {
             // grep out symbols for classes being injected from object file
 
+            try injectGenerics(tmpfile: tmpfile, handle: dl)
+
             guard shell(command: """
-                \(xcode)/Toolchains/XcodeDefault.xctoolchain/usr/bin/nm \(tmpfile).o | grep ' S _OBJC_CLASS_$_' | awk '{print $3}' >\(tmpfile).classes
+                \(xcodeDev)/Toolchains/XcodeDefault.xctoolchain/usr/bin/nm \(tmpfile).o | grep -E ' S _OBJC_CLASS_\\$_| __T0.*CN$' | awk '{print $3}' >\(tmpfile).classes
                 """) else {
-                return evalError("Could not list class symbols")
+                throw evalError("Could not list class symbols")
             }
             guard var symbols = (try? String(contentsOfFile: "\(tmpfile).classes"))?.components(separatedBy: "\n") else {
-                return evalError("Could not load class symbol list")
+                throw evalError("Could not load class symbol list")
             }
-
             symbols.removeLast()
-            return symbols.flatMap { dlsym(dl, String($0.dropFirst())) }.map { unsafeBitCast($0, to: AnyClass.self) }
+
+            return Set(symbols.flatMap { dlsym(dl, String($0.dropFirst())) }).map { unsafeBitCast($0, to: AnyClass.self) }
         }
     }
 
-    func findCompileCommand(logsDir: URL, classNameOrFile: String, tmpfile: String) -> (compileCommand: String, sourceFile: String)? {
+    func findCompileCommand(logsDir: URL, classNameOrFile: String, tmpfile: String) throws -> (compileCommand: String, sourceFile: String)? {
         // path to project can contain spaces and '$&(){}
         // Objective-C paths can only contain space and '
         // project file itself can only contain spaces
-        // (logs of new build system escape ', $ and ")
-        let swiftEscaped = "\\Q\(classNameOrFile.escaping("'$", "\\E\\\\*$0\\Q"))\\E\\.(?:swift|mm?)"
-        let objcEscaped = "\\Q\(classNameOrFile.escaping(" '"))\\E\\.(?:swift|mm?)"
-        let regexp = " -(?:primary-file|c) (?:\\\\?\"([^\"]*?/\(swiftEscaped))\\\\?\"|(\\S*?/\(objcEscaped))) "
+        let isFile = classNameOrFile.hasPrefix("/")
+        let sourceRegex = isFile ? "\\Q\(classNameOrFile)\\E" : "/\(classNameOrFile)\\.(?:swift|mm?)"
+        let swiftEscaped = (isFile ? "" : "[^\"]*?") + sourceRegex.escaping("'$", with: "\\E\\\\*$0\\Q")
+        let objcEscaped = (isFile ? "" : "\\S*?") + sourceRegex.escaping("' ")
+        var regexp = " -(?:primary-file|c(?<! -frontend -c)) (?:\\\\?\"(\(swiftEscaped))\\\\?\"|(\(objcEscaped))) "
 
         // messy but fast
         guard shell(command: """
@@ -274,6 +351,7 @@ public class SwiftEval: NSObject {
             for log in `ls -t "\(logsDir.path)/"*.xcactivitylog`; do
                 echo "Scanning $log"
                 /usr/bin/env perl <(cat <<'PERL'
+                    use JSON::PP;
                     use English;
                     use strict;
 
@@ -281,14 +359,38 @@ public class SwiftEval: NSObject {
                     $INPUT_RECORD_SEPARATOR = "\\r";
 
                     # format is gzip
-                    open GUNZIP, "/usr/bin/gunzip <\\"$ARGV[0]\\" |" or die;
+                    open GUNZIP, "/usr/bin/gunzip <\\"$ARGV[0]\\" 2>/dev/null |" or die;
 
                     # grep the log until there is a match
+                    my $realPath;
                     while (defined (my $line = <GUNZIP>)) {
-                        if ($line =~ m@\(regexp.escaping("\"$"))@o) {
+                        if ($line =~ /^\\s*cd /) {
+                            $realPath = $line;
+                        }
+                        elsif ($line =~ m@\(regexp.escaping("\"$"))@o and $line =~ " \(arch)") {
                             # found compile command
-                            print $line;
+                            # may need to extract file list
+                            if ($line =~ / -filelist /) {
+                                while (defined (my $line2 = <GUNZIP>)) {
+                                    if (my($filemap) = $line2 =~ / -output-file-map ([^ \\\\]+(?:\\\\ [^ \\\\]+)*) / ) {
+                                        $filemap =~ s/\\\\//g;
+                                        my $file_handle = IO::File->new( "< $filemap" )
+                                            or die "Could not open filemap '$filemap'";
+                                        my $json_text = join'', $file_handle->getlines();
+                                        my $json_map = decode_json( $json_text, { utf8  => 1 } );
+                                        my $filelist = "/tmp/filelist.txt";
+                                        my $swift_sources = join "\n", keys %$json_map;
+                                        IO::File->new( "> $filelist" )->print( $swift_sources );
+                                        $line =~ s/( -filelist )(\\S+)( )/$1$filelist$3/;
+                                        last;
+                                    }
+                                }
+                            }
+                            if ($realPath and (undef, $realPath) = $realPath =~ /cd (\\"?)(.*?)\\1\\r/) {
+                                print "cd \\"$realPath\\" && ";
+                            }
                             # stop search
+                            print $line;
                             exit 0;
                         }
                     }
@@ -298,7 +400,7 @@ public class SwiftEval: NSObject {
             PERL
                 ) "$log" >"\(tmpfile).sh" && exit 0
             done
-            exit 1
+            exit 1;
             """) else {
             return nil
         }
@@ -308,89 +410,179 @@ public class SwiftEval: NSObject {
 
         // remove excess escaping in new build system
         compileCommand = compileCommand
+            // (logs of new build system escape ', $ and ")
             .replacingOccurrences(of: "\\\\([\"'\\\\])", with: "$1", options: [.regularExpression])
+            // pch file may no longer exist
             .replacingOccurrences(of: " -pch-output-dir \\S+ ", with: " ", options: [.regularExpression])
 
-        // extract full path to file from compile command
+        if isFile {
+            return (compileCommand, classNameOrFile)
+        }
+
+        // for eval() extract full path to file from compile command
+
+        let fileExtractor: NSRegularExpression
+        regexp = regexp.escaping("$")
 
         do {
-            let fileExtractor = try NSRegularExpression(pattern: regexp.escaping("$"), options: [])
-            guard let matches = fileExtractor.firstMatch(in: compileCommand, options: [],
-                                                         range: NSMakeRange(0, compileCommand.utf16.count)),
-                let sourceFile = compileCommand[matches.range(at: 1)] ??
-                                 compileCommand[matches.range(at: 2)] else {
-                _ =  evalError("Could not locate source file \(compileCommand)")
-                return nil
-            }
-
-            return (compileCommand, sourceFile)
+            fileExtractor = try NSRegularExpression(pattern: regexp, options: [])
         }
         catch {
-            _ =  evalError("Regexp parse error: \(error) -- \(regexp) -- \(regexp.escaping("$"))")
+            throw evalError("Regexp parse error: \(error) -- \(regexp)")
+        }
+
+        guard let matches = fileExtractor.firstMatch(in: compileCommand, options: [],
+                                                     range: NSMakeRange(0, compileCommand.utf16.count)),
+            let sourceFile = compileCommand[matches.range(at: 1)] ??
+                             compileCommand[matches.range(at: 2)] else {
+            throw evalError("Could not locate source file \(compileCommand) -- \(regexp)")
+        }
+
+        return (compileCommand, sourceFile.replacingOccurrences(of: "\\$", with: "$"))
+    }
+
+    lazy var mainHandle = dlopen(nil, RTLD_NOLOAD)
+
+    func injectGenerics(tmpfile: String, handle: UnsafeMutableRawPointer) throws {
+
+        guard shell(command: """
+            \(xcodeDev)/Toolchains/XcodeDefault.xctoolchain/usr/bin/nm \(tmpfile).o | grep -E ' __T0.*CMn$' | awk '{print $3}' >\(tmpfile).generics
+            """) else {
+                throw evalError("Could not list generics symbols")
+        }
+        guard var generics = (try? String(contentsOfFile: "\(tmpfile).generics"))?.components(separatedBy: "\n") else {
+            throw evalError("Could not load generics symbol list")
+        }
+        generics.removeLast()
+
+        struct NominalTypeDescriptor {
+            let Name: UInt32 = 0, NumFields: UInt32 = 0
+            let FieldOffsetVectorOffset: UInt32 = 0, FieldNames: UInt32 = 0
+            let GetFieldTypes: UInt32 = 0, SadnessAndKind: UInt32 = 0
+        }
+
+        struct TargetGenericMetadata {
+            let CreateFunction: uintptr_t = 0, MetadataSize: UInt32 = 0
+            let NumKeyArguments: UInt16 = 0, AddressPoint: UInt16 = 0
+
+            let PrivateData1: uintptr_t = 0, PrivateData2: uintptr_t = 0
+            let PrivateData3: uintptr_t = 0, PrivateData4: uintptr_t = 0
+            let PrivateData5: uintptr_t = 0, PrivateData6: uintptr_t = 0
+            let PrivateData7: uintptr_t = 0, PrivateData8: uintptr_t = 0
+            let PrivateData9: uintptr_t = 0, PrivateData10: uintptr_t = 0
+            let PrivateData11: uintptr_t = 0, PrivateData12: uintptr_t = 0
+            let PrivateData13: uintptr_t = 0, PrivateData14: uintptr_t = 0
+            let PrivateData15: uintptr_t = 0, PrivateData16: uintptr_t = 0
+
+            let Destructor: uintptr_t = 0, Witness: uintptr_t = 0
+            let MetaClass: uintptr_t = 0, SuperClass: uintptr_t = 0
+            let CacheData1: uintptr_t = 0, CacheData2: uintptr_t = 0
+            let Data: uintptr_t = 0
+
+            let Flags: UInt32 = 0, InstanceAddressPoint: UInt32 = 0
+            let InstanceSize: UInt32 = 0
+            let InstanceAlignMask: UInt16 = 0, Reserved: UInt16 = 0
+            let ClassSize: UInt32 = 0, ClassAddressPoint: UInt32 = 0
+
+            var DescriptionOffset: uintptr_t = 0
+        }
+
+        func getPattern(handle: UnsafeMutableRawPointer!, sym: String) -> UnsafeMutablePointer<TargetGenericMetadata>? {
+            if let desc = dlsym(handle, String(sym.dropFirst()))?
+                .assumingMemoryBound(to: NominalTypeDescriptor.self),
+                desc.pointee.SadnessAndKind != 0 {
+                return desc.withMemoryRebound(to: UInt8.self, capacity: 1) {
+                    ($0 + Int(desc.pointee.SadnessAndKind) + 5 * MemoryLayout<UInt32>.size)
+                        .withMemoryRebound(to: TargetGenericMetadata.self, capacity: 1) {
+                            $0
+                    }
+                }
+            }
             return nil
+        }
+
+        for generic in generics {
+            if let newpattern = getPattern(handle: handle, sym: generic),
+                let oldpattern = getPattern(handle: mainHandle, sym: generic) {
+                let save = oldpattern.pointee.DescriptionOffset
+                memcpy(oldpattern, newpattern, Int(oldpattern.pointee.MetadataSize))
+                oldpattern.pointee.DescriptionOffset = save
+            }
         }
     }
 
     func findDerivedData(url: URL) -> URL? {
-        let dir = url.deletingLastPathComponent()
-        if dir.path == "/" {
+        if url.path == "/" {
             return nil
         }
 
-        let derived = dir.appendingPathComponent("Library/Developer/Xcode/DerivedData")
+        let derived = url.appendingPathComponent("Library/Developer/Xcode/DerivedData")
         if FileManager.default.fileExists(atPath: derived.path) {
             return derived
         }
 
-        return findDerivedData(url: dir)
+        return findDerivedData(url: url.deletingLastPathComponent())
     }
 
-    func findProject(for source: URL, derivedData: URL) -> (URL, URL)? {
+    func findProject(for source: URL, derivedData: URL) -> (projectFile: URL, logsDir: URL)? {
         let dir = source.deletingLastPathComponent()
         if dir.path == "/" {
             return nil
         }
 
+        var candidate = findProject(for: dir, derivedData: derivedData)
+
         if let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path),
             let project = file(withExt: "xcworkspace", in: files) ?? file(withExt: "xcodeproj", in: files),
-            let logs = logDir(project: dir.appendingPathComponent(project), derivedData: derivedData) {
-            return (dir.appendingPathComponent(project), logs)
+            let logsDir = logsDir(project: dir.appendingPathComponent(project), derivedData: derivedData),
+            mtime(logsDir) > candidate.flatMap({ mtime($0.logsDir) }) ?? 0 {
+                candidate = (dir.appendingPathComponent(project), logsDir)
         }
 
-        return findProject(for: dir, derivedData: derivedData)
+        return candidate
     }
 
     func file(withExt ext: String, in files: [String]) -> String? {
         return files.first { URL(fileURLWithPath: $0).pathExtension == ext }
     }
 
-    func logDir(project: URL, derivedData: URL) -> URL? {
+    func mtime(_ url: URL) -> time_t {
+        var info = stat()
+        return stat(url.path, &info) == 0 ? info.st_mtimespec.tv_sec : 0
+    }
+
+    func logsDir(project: URL, derivedData: URL) -> URL? {
         let filemgr = FileManager.default
         let projectPrefix = project.deletingPathExtension()
-            .lastPathComponent.replacingOccurrences(of: " ", with: "_")
+            .lastPathComponent.replacingOccurrences(of: "\\s+", with: "_",
+                                    options: .regularExpression, range: nil)
         let relativeDerivedData = project.deletingLastPathComponent()
             .appendingPathComponent("DerivedData/\(projectPrefix)/Logs/Build")
-
-        func mtime(_ path: String) -> time_t {
-            var info = stat()
-            return stat(path, &info) == 0 ? info.st_mtimespec.tv_sec : 0
-        }
 
         return ((try? filemgr.contentsOfDirectory(atPath: derivedData.path))?
             .filter { $0.starts(with: projectPrefix + "-") }
             .map { derivedData.appendingPathComponent($0 + "/Logs/Build") }
             ?? [] + [relativeDerivedData])
             .filter { filemgr.fileExists(atPath: $0.path) }
-            .sorted { mtime($0.path) > mtime($1.path) }
+            .sorted { mtime($0) > mtime($1) }
             .first
     }
 
     func shell(command: String) -> Bool {
+        try? command.write(toFile: "/tmp/command.sh", atomically: false, encoding: .utf8)
         debug(command)
 
+        #if !(os(iOS) || os(tvOS))
+        let task = Process()
+        task.launchPath = "/bin/bash"
+        task.arguments = ["-c", command]
+        task.launch()
+        task.waitUntilExit()
+        return task.terminationStatus == EXIT_SUCCESS
+        #else
         let pid = fork()
         if pid == 0 {
-            var args = Array<UnsafeMutablePointer<Int8>?>(repeating: nil, count: 4)
+            var args = [UnsafeMutablePointer<Int8>?](repeating: nil, count: 4)
             args[0] = strdup("/bin/bash")!
             args[1] = strdup("-c")!
             args[2] = strdup(command)!
@@ -403,11 +595,17 @@ public class SwiftEval: NSObject {
         var status: Int32 = 0
         while waitpid(pid, &status, 0) == -1 {}
         return status >> 8 == EXIT_SUCCESS
+        #endif
     }
 }
 
+#if os(iOS) || os(tvOS)
 @_silgen_name("fork")
 func fork() -> Int32
+@_silgen_name("execve")
+func execve(_ __file: UnsafePointer<Int8>!, _ __argv: UnsafePointer<UnsafeMutablePointer<Int8>?>!, _ __envp: UnsafePointer<UnsafeMutablePointer<Int8>?>!) -> Int32
 @_silgen_name("_NSGetEnviron")
 func _NSGetEnviron() -> UnsafePointer<UnsafePointer<UnsafeMutablePointer<Int8>?>?>!
 #endif
+#endif
+

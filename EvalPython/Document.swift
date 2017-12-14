@@ -37,13 +37,13 @@ class Document: NSDocument {
         let code = self.code.string
         queue.async {
             catchTraps {
-                evalError = {
-                    (_ message: String) -> [AnyClass]? in
+                SwiftEval.instance.evalError = {
+                    (_ message: String) -> Error in
                     DispatchQueue.main.async {
                         self.output.string = message
                         self.status("Build Error ^")
                     }
-                    return nil
+                    return NSError(domain: "SwiftEval", code: -1, userInfo: [NSLocalizedDescriptionKey: message])
                 }
                 pythonWarn = {
                     (_ message: String) in

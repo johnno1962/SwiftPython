@@ -5,7 +5,7 @@
 //  Created by John Holdsworth on 12/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
-//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#185 $
+//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#188 $
 //
 //  Support for Python bridge classes. PyObject pointers and represented in Swift
 //  and reference counted by the PythonObject class and marshalled using the
@@ -46,9 +46,8 @@ public var pythonWarn = {
 /// - Parameter python: string of valid Python
 public func pythonEval(code python: String) {
     _ = PythonModule.initialize
-    PyRun_SimpleStringFlags(python, nil)
-    if let _ = PyErr_Occurred() {
-        PyErr_Print()
+    if PyRun_SimpleStringFlags(python, nil) != 0 {
+        pythonWarn("pythonEval() error occured")
     }
 }
 
@@ -275,7 +274,8 @@ open class PythonFunction: PythonObject {
     public func call(args: [Any?], kw: [String: Any]? = nil) -> PythonObject {
         let kw = kw.flatMap { PyObjectPtr(any: $0) }
         let result = PythonTuple(args: args).withPtr { PyObject_Call(pyObject, $0, kw) }
-        if let _ = PyErr_Occurred() {
+        if let err = PyErr_Occurred() {
+            pythonWarn("Python error occured during call: \(err.description)")
             PyErr_Print()
         }
         if kw != nil {
@@ -403,14 +403,13 @@ open class PythonList<T>: PythonObject, Sequence, Collection {
     public typealias Iterator = AnyIterator<T>
 
     private struct Listerator<T>: IteratorProtocol {
-        typealias Element = T
         let list: PythonList<T>
         var index = 0
 
         init(list: PythonList<T>) {
             self.list = list
         }
-        public mutating func next() -> Element? {
+        public mutating func next() -> T? {
             defer { index += 1 }
             if index < list.size {
                 return list[index]
@@ -520,7 +519,6 @@ open class PythonDict<T>: PythonObject, Sequence {
     public typealias Iterator = AnyIterator<(key: String, value: T)>
 
     private struct Dicterator<T>: IteratorProtocol {
-        typealias Element = (key: String, value: T)
         let dict: PythonDict<T>
         let keys: [String]
         var index = 0
@@ -529,7 +527,7 @@ open class PythonDict<T>: PythonObject, Sequence {
             self.dict = dict
             self.keys = dict.keys
         }
-        mutating func next() -> Element? {
+        mutating func next() -> (key: String, value: T)? {
             defer { index += 1 }
             if index < keys.count, let value = dict[keys[index]] {
                 return (keys[index], value)

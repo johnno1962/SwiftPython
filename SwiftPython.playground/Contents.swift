@@ -103,6 +103,10 @@ cplx.echoArray(value: ["data": Array(0 ..< 1_000_000)])
     .asAny(of: [String: [Int]].self)["data"]![1000]
 print(Date().timeIntervalSince(start))
 
+// On macOS Sierra, with Anaconda installed and a small patch to
+// the Python framework you can use 3d plots. Details in myplot.py:
+//let myplotModule = PythonModule(named: "myplot")
+
 // Finally, Python's plot routines can be made available manually
 let matplotlib_pyplotModule = PythonModule(named: "matplotlib.pyplot")
 let imshowFunction = matplotlib_pyplotModule.function(named: "imshow")
