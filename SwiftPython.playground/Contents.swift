@@ -103,8 +103,8 @@ cplx.echoArray(value: ["data": Array(0 ..< 1_000_000)])
     .asAny(of: [String: [Int]].self)["data"]![1000]
 print(Date().timeIntervalSince(start))
 
-// On macOS Sierra, with Anaconda installed and a small patch to
-// the Python framework you can use 3d plots. Details in myplot.py:
+// With Anaconda 2.7 installed and a small patch to the Python framework
+// (only required on Sierra) you can use 3d plots. Details in myplot.py:
 //let myplotModule = PythonModule(named: "myplot")
 
 // Finally, Python's plot routines can be made available manually
@@ -123,4 +123,7 @@ func show(_ kw: [String: Any]? = nil) -> PythonObject {
 
 print("Mandelbrot window may appear behind the playground/workspace")
 imshow(mandelbrot(400,400))
-show(["block": true])
+show(["block": false])
+
+import PlaygroundSupport
+PlaygroundPage.current.needsIndefiniteExecution = true

@@ -54,10 +54,11 @@ def newComplex(real, imag):
     return Complex(real, imag)
 
 # For plot example
-import numpy as np
-
 def mandelbrot( h,w, maxit=20):
     """Returns an image of the Mandelbrot fractal of size (h,w)."""
+    import numpy as np
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
     y,x = np.ogrid[ -1.4:1.4:h*1j, -2:0.8:w*1j ]
     c = x+y*1j
     z = c

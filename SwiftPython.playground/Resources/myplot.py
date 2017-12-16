@@ -5,12 +5,14 @@
 #
 # 3d ploting examples. To have it work in a playground you need to
 # persuade the Python dylib to use the Anaconda versions of modules.
-# The first step is to alter the sys.path to point to Anaconda which
-# leaves you with linkage errors. To resolve these you need to turn
-# off "SIP" momentarily and add an "rpath" to the Python framework:
+# Downloaded from here: https://www.anaconda.com/download/#macos
 #
-# Note: This only works on macOS Sierra. On High Sierra it will
-# break your Xcode due to codesigning so you must keep a backup!
+# The first step is to alter the sys.path to point to Anaconda. This
+# leaves you with linkage errors on Sierra. To resolve these you can
+# turn off "SIP" momentarily and add an "rpath" to the Python framework:
+#
+# Note: This only works on macOS Sierra. * On High Sierra it is not required *
+# and will break your macOS & Xcode due to codesigning so always keep a backup!
 #
 # sudo mv -i /System/Library/Frameworks/Python.framework/Versions/2.7/Python /System/Library/Frameworks/Python.framework/Versions/2.7/Python.save
 # sudo cp /System/Library/Frameworks/Python.framework/Versions/2.7/Python.save /System/Library/Frameworks/Python.framework/Versions/2.7/Python
@@ -29,13 +31,15 @@ sys.path.insert(1, anaconda2+"/backports")
 sys.path.insert(1, anaconda2+"/mpl_toolkits")
 
 import matplotlib
-# a better renderer UI but
-# crashes out inside Xcode
+# A better renderer UI but
+# crashes out in playgrounds
 #matplotlib.use('Qt5Agg')
 
 import matplotlib.pyplot as plt
 from mplot3d import Axes3D
 import numpy as np
+
+doblock=False
 
 def myplot():
     import matplotlib as mpl
@@ -51,7 +55,7 @@ def myplot():
     y = r * np.cos(theta)
     ax.plot(x, y, z, label='parametric curve')
     ax.legend()
-    plt.show()
+    plt.show(block=doblock)
 
 myplot()
 
@@ -74,7 +78,7 @@ def myplot2():
     ax.set_zlabel('Z')
     ax.set_zlim(-100, 100)
 
-    plt.show()
+    plt.show(block=doblock)
 
 myplot2()
 
@@ -104,7 +108,7 @@ def myplot3():
     # Add a color bar which maps values to colors.
     fig.colorbar(surf, shrink=0.5, aspect=5)
 
-    plt.show()
+    plt.show(block=doblock)
 
 myplot3()
 
@@ -145,7 +149,6 @@ def plot4():
     ax.set_zlabel("Z Axis")
     ax.set_title("Lorenz Attractor")
 
-    plt.show()
+    plt.show(block=doblock)
 
 plot4()
-
