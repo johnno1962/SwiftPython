@@ -5,7 +5,7 @@
 //  Created by John Holdsworth on 12/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
-//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#188 $
+//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#191 $
 //
 //  Support for Python bridge classes. PyObject pointers and represented in Swift
 //  and reference counted by the PythonObject class and marshalled using the
@@ -647,14 +647,14 @@ extension UnsafeMutablePointer where Pointee == PyObject {
             return (0 ..< PythonList<Double>(any: self).size)
                 .map { Double(PyList_GetItem(self, $0)) }
         } else if let arrayType = type as? ArrayTyping.Type {
-            let elementType = arrayType.elementType()
+            let elementType = arrayType.elementType
             if let convertibleType = elementType as? PythonConvertible.Type {
                 return convertibleType.convertibleArray(from: self)
             }
             return (0 ..< PythonList<Any>(any: self).size)
                 .map { PyList_GetItem(self, $0).asAny(of: elementType) }
         } else if let dictionaryType = type as? DictionaryTyping.Type {
-            let valueType = dictionaryType.valueType()
+            let valueType = dictionaryType.valueType
             if let convertibleType = valueType as? PythonConvertible.Type {
                 return convertibleType.convertibleDictionary(from: self)
             }
@@ -691,23 +691,23 @@ extension UnsafeMutablePointer where Pointee == PyObject {
 
 /// Introspection of collections
 private protocol ArrayTyping {
-    static func elementType() -> Any.Type
+    static var elementType: Any.Type { get }
 }
 extension Array: ArrayTyping {
-    fileprivate static func elementType() -> Any.Type {
+    static var elementType: Any.Type {
         return Element.self
     }
 }
 
 private protocol DictionaryTyping {
-    static func keyType() -> Any.Type
-    static func valueType() -> Any.Type
+    static var keyType: Any.Type { get }
+    static var valueType: Any.Type { get }
 }
 extension Dictionary: DictionaryTyping {
-    fileprivate static func keyType() -> Any.Type {
+    fileprivate static var keyType: Any.Type {
         return Key.self
     }
-    fileprivate static func valueType() -> Any.Type {
+    fileprivate static var valueType: Any.Type {
         return Value.self
     }
 }
@@ -806,44 +806,43 @@ extension Bool: PythonConvertible {
     public var toPython: UnownedPyObjectPtr { return PyBool_FromLong(self ? 1 : 0) }
 }
 
-/// Called directly from Python to implement calls back to Swift
-///
-/// - Parameters:
-///   - self: N/A
-///   - args: A PythonTuple containing a closure pointer and a list of arguments
-/// - Returns: whatever the Swift closure returns with +1 referrence count
-private func swiftCallback(_ self: PyObjectPtr?, _ args: PyObjectPtr?) -> UnownedPyObjectPtr? {
-    if let pointer = PyLong_AsVoidPtr(PyTuple_GetItem(args, 0)) {
-        let closure = Unmanaged<PythonClosure>.fromOpaque(pointer).takeUnretainedValue()
-        if let args = PyTuple_GetItem(args, 1) {
-            if args != pythonNone {
-                let args = PythonList<PythonObject>(any: args).asArray
-                if let result = closure.closure(args) {
-                    return result.takeReference()
-                }
-            } else {
-                Unmanaged.passUnretained(closure).release()
-            }
-        }
-    } else {
-        pythonWarn("swiftCallback: nil closure pointer")
-    }
-
-    return PythonNone.takeReference()
-}
-
-private var methods: [PyMethodDef] = {
-    var methods = [PyMethodDef](repeating: PyMethodDef(), count: 2)
-    methods[0].ml_name = UnsafePointer<Int8>(strdup("callback"))
-    methods[0].ml_meth = swiftCallback
-    methods[0].ml_flags = METH_VARARGS
-    methods[0].ml_doc = UnsafePointer<Int8>(strdup("Swift callback"))
-    return methods
-}()
-
 /// Holder for a closure the pointer to which is passed to python as an
 /// integer from which the pointer to an instance of this class is recovered.
 private class PythonClosure {
+
+    private static var methods: [PyMethodDef] = {
+        var methods = [PyMethodDef](repeating: PyMethodDef(), count: 2)
+        methods[0].ml_name = UnsafePointer<Int8>(strdup("callback"))
+        methods[0].ml_meth = {
+            /// Called directly from Python to implement calls back to Swift
+            ///
+            /// - Parameters:
+            ///   - self: N/A
+            ///   - args: A PythonTuple containing a closure pointer and a List of arguments
+            /// - Returns: whatever the Swift closure returns with +1 referrence count
+            (_ self: PyObjectPtr?, _ args: PyObjectPtr?) -> UnownedPyObjectPtr? in
+            if let pointer = PyLong_AsVoidPtr(PyTuple_GetItem(args, 0)) {
+                let closure = Unmanaged<PythonClosure>.fromOpaque(pointer).takeUnretainedValue()
+                if let args = PyTuple_GetItem(args, 1) {
+                    if args != pythonNone {
+                        let args = PythonList<PythonObject>(any: args).asArray
+                        if let result = closure.closure(args) {
+                            return result.takeReference()
+                        }
+                    } else {
+                        Unmanaged.passUnretained(closure).release()
+                    }
+                }
+            } else {
+                pythonWarn("swiftCallback: nil closure pointer")
+            }
+
+            return PythonNone.takeReference()
+        }
+        methods[0].ml_flags = METH_VARARGS
+        methods[0].ml_doc = UnsafePointer<Int8>(strdup("Swift callback"))
+        return methods
+    }()
 
     private static let wrapper: PythonClass = {
         let main = PythonModule.main
