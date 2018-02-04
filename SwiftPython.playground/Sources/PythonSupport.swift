@@ -5,7 +5,7 @@
 //  Created by John Holdsworth on 12/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
-//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#191 $
+//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#192 $
 //
 //  Support for Python bridge classes. PyObject pointers and represented in Swift
 //  and reference counted by the PythonObject class and marshalled using the
@@ -184,20 +184,12 @@ extension PythonObject {
         return PythonDict<T>(any: self).asDictionary
     }
 
-    /// Create an instance of the specified subclass of Python Object
-    ///
-    /// - Parameter type: class type object
-    /// - Returns: New instance of that class
-    public func asObject<T: PythonObject>(of type: T.Type) -> T {
-        return type.init(any: self)
-    }
-
     /// Create an instance of a generated PythonObject subclass
     public var asInstance: PythonObject {
         if pyObject.pyType == &PyInstance_Type,
             let wrapped = getAttr(named: "__class__").getAttr(named: "__swift__type__", report: false).notNone(),
             let swiftClass = unsafeBitCast(wrapped.withPtr { PyLong_AsVoidPtr($0) }, to: PythonObject.Type?.self) {
-            return asObject(of: swiftClass)
+            return asAny(of: swiftClass)
         }
         return self
     }
@@ -636,7 +628,7 @@ extension UnsafeMutablePointer where Pointee == PyObject {
         } else if type == PythonObject.self {
             return PythonObject(any: self).asInstance
         } else if let subtype = type as? PythonObject.Type {
-            return PythonObject(any: self).asObject(of: subtype)
+            return subtype.init(any: self)
         } else if type == [Int].self {
             return (0 ..< PythonList<Int>(any: self).size)
                 .map { Int(PyList_GetItem(self, $0)) }
@@ -923,16 +915,16 @@ extension Float : PythonConvertible {
 //===----------------------------------------------------------------------===//
 
 public func +<T: PythonObject>(lhs: T, rhs: PythonObject) -> T {
-    return lhs.function(named: "__add__").call(args: [rhs]).asObject(of: T.self)
+    return lhs.function(named: "__add__").call(args: [rhs]).asAny(of: T.self)
 }
 public func -<T: PythonObject>(lhs: T, rhs: PythonObject) -> T {
-    return lhs.function(named: "__sub__").call(args: [rhs]).asObject(of: T.self)
+    return lhs.function(named: "__sub__").call(args: [rhs]).asAny(of: T.self)
 }
 public func *<T: PythonObject>(lhs: T, rhs: PythonObject) -> T {
-    return lhs.function(named: "__mul__").call(args: [rhs]).asObject(of: T.self)
+    return lhs.function(named: "__mul__").call(args: [rhs]).asAny(of: T.self)
 }
 public func /<T: PythonObject>(lhs: T, rhs: PythonObject) -> T {
-    return lhs.function(named: "__truediv__").call(args: [rhs]).asObject(of: T.self)
+    return lhs.function(named: "__truediv__").call(args: [rhs]).asAny(of: T.self)
 }
 public func +=<T: PythonObject>(lhs: inout T, rhs: PythonObject) {
     lhs = lhs + rhs

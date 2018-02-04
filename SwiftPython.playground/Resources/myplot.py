@@ -7,20 +7,6 @@
 # persuade the Python dylib to use the Anaconda versions of modules.
 # Downloaded from here: https://www.anaconda.com/download/#macos
 #
-# The first step is to alter the sys.path to point to Anaconda. This
-# leaves you with linkage errors on Sierra. To resolve these you can
-# turn off "SIP" momentarily and add an "rpath" to the Python framework:
-#
-# Note: This only works on macOS Sierra. * On High Sierra it is not required *
-# and will break your macOS & Xcode due to codesigning so always keep a backup!
-#
-# sudo mv -i /System/Library/Frameworks/Python.framework/Versions/2.7/Python /System/Library/Frameworks/Python.framework/Versions/2.7/Python.save
-# sudo cp /System/Library/Frameworks/Python.framework/Versions/2.7/Python.save /System/Library/Frameworks/Python.framework/Versions/2.7/Python
-# sudo install_name_tool -add_rpath ~/anaconda2/lib /System/Library/Frameworks/Python.framework/Versions/2.7/Python
-# sudo bash -c "export CODESIGN_ALLOCATE=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate; codesign --force -s "-" /System/Library/Frameworks/Python.framework/Versions/2.7/Python"
-#
-# Once this change is made you should turn SIP back on.
-#
 
 import sys
 import os
