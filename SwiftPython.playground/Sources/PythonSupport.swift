@@ -5,7 +5,7 @@
 //  Created by John Holdsworth on 12/11/2017.
 //  Copyright © 2017 John Holdsworth. All rights reserved.
 //
-//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#192 $
+//  $Id: //depot/SwiftPython/SwiftPython.playground/Sources/PythonSupport.swift#193 $
 //
 //  Support for Python bridge classes. PyObject pointers and represented in Swift
 //  and reference counted by the PythonObject class and marshalled using the
@@ -54,7 +54,7 @@ public func pythonEval(code python: String) {
 /// Wrapper for all Python objects received or created
 open class PythonObject: CustomStringConvertible {
 
-    open let pyObject: PyObjectPtr
+    public let pyObject: PyObjectPtr
 
     /// Take ownership of PyObject * object
     ///
@@ -203,7 +203,7 @@ extension PythonObject {
 /// Wrapper for a Python Module object
 open class PythonModule: PythonObject {
 
-    open let name: String
+    public let name: String
 
     static var initialize: Void = {
         Py_Initialize()
@@ -280,7 +280,7 @@ open class PythonFunction: PythonObject {
 /// Wrapper for a Python Class object
 open class PythonClass: PythonFunction {
 
-    open let name: String
+    public let name: String
 
     public required init(any: Any) {
         name = ""
